@@ -39,6 +39,8 @@ export type Database = {
           email: string
           first_name: string
           id: string
+          ip_address: string | null
+          submission_count: number | null
           whatsapp: string
         }
         Insert: {
@@ -47,6 +49,8 @@ export type Database = {
           email: string
           first_name: string
           id?: string
+          ip_address?: string | null
+          submission_count?: number | null
           whatsapp: string
         }
         Update: {
@@ -55,6 +59,8 @@ export type Database = {
           email?: string
           first_name?: string
           id?: string
+          ip_address?: string | null
+          submission_count?: number | null
           whatsapp?: string
         }
         Relationships: []
