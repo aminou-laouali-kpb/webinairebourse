@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 // Configuration - Remplace ces URLs par tes vraies URLs
 const CONFIG = {
-  youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Remplace par {{YOUTUBE_URL}}
+  youtubeUrl: "https://www.youtube.com/embed/txFGmhZhpv4",
   guideImageUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=600&fit=crop", // Remplace par {{GUIDE_IMAGE_URL}}
   testimonialsImageUrl: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=400&fit=crop", // Remplace par {{TESTIMONIALS_IMAGE_URL}}
   checkoutUrl: "https://kpb-education.maketou.com/products/le-guide-ultime-du-boursier-africain/checkout?utm_source=webinaire&utm_medium=miniapp&utm_campaign=guide_ultime"
