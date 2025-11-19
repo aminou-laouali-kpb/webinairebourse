@@ -119,7 +119,7 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
 
       if (error) {
         if (error.code === '23505') {
-          toast.error('Cet email est déjà inscrit');
+          toast.error('Cet email est déjà inscrit. Vous avez déjà accès au webinaire !');
         } else {
           throw error;
         }
