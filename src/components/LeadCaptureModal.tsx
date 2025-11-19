@@ -10,6 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PhoneInput } from "react-international-phone";
+import "react-international-phone/style.css";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LeadCaptureModalProps {
   onClose: () => void;
@@ -21,6 +24,11 @@ export interface LeadFormData {
   email: string;
   whatsapp: string;
   country: string;
+}
+
+interface LeadCaptureModalProps {
+  onClose: () => void;
+  onSubmit: (data: LeadFormData) => void;
 }
 
 const africanCountries = [
@@ -42,6 +50,8 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
     whatsapp: "",
     country: "",
   });
+  const [phone, setPhone] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -56,10 +66,34 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
     };
   }, [onClose]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.firstName && formData.email && formData.whatsapp && formData.country) {
-      onSubmit(formData);
+    if (!formData.firstName || !formData.email || !phone || !formData.country) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const leadData = {
+        first_name: formData.firstName,
+        email: formData.email,
+        whatsapp: phone,
+        country: formData.country
+      };
+
+      const { error } = await supabase
+        .from('webinar_leads')
+        .insert([leadData]);
+
+      if (error) throw error;
+      
+      onSubmit({ ...formData, whatsapp: phone });
+    } catch (error) {
+      console.error('Error saving lead:', error);
+      alert("Une erreur s'est produite. Veuillez réessayer.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -83,10 +117,10 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
         <div className="p-6 md:p-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              Recevoir le replay, les slides et les ressources bonus
+              Remplis le formulaire pour obtenir ton accès au Webinaire Gratuit !
             </h2>
             <p className="text-muted-foreground">
-              Remplis ce formulaire pour accéder à tout le contenu gratuitement
+              Nous t'enverrons aussi le Guide des 10 Bourses à ne pas râter en 2026 !
             </p>
           </div>
 
@@ -125,15 +159,15 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
               <Label htmlFor="whatsapp" className="text-foreground font-semibold">
                 WhatsApp <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="whatsapp"
-                type="tel"
-                required
-                value={formData.whatsapp}
-                onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                className="mt-1.5 h-12 border-2 focus:border-gold"
-                placeholder="+225 XX XX XX XX XX"
-              />
+              <div className="mt-1.5">
+                <PhoneInput
+                  defaultCountry="ci"
+                  value={phone}
+                  onChange={(phone) => setPhone(phone)}
+                  inputClassName="h-12"
+                  className="phone-input-custom"
+                />
+              </div>
             </div>
 
             <div>
@@ -164,10 +198,11 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
 
             <Button
               type="submit"
-              className="w-full h-14 text-lg font-bold bg-gold hover:bg-gold-light text-blue-dark shadow-cta transition-all"
+              disabled={isSubmitting}
+              className="w-full h-14 text-lg font-bold bg-gold hover:bg-gold-light text-blue-dark shadow-cta transition-all disabled:opacity-50"
               aria-label="Obtenir les ressources gratuites"
             >
-              Je veux les ressources 🎁
+              {isSubmitting ? "Envoi en cours..." : "Je veux les ressources 🎁"}
             </Button>
           </form>
         </div>
