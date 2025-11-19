@@ -126,6 +126,27 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
         return;
       }
 
+      // Send data to webhooks (non-blocking)
+      const webhookData = {
+        first_name: validationResult.data.firstName.trim(),
+        email: validationResult.data.email.trim().toLowerCase(),
+        whatsapp: validationResult.data.whatsapp,
+        country: validationResult.data.country
+      };
+
+      Promise.all([
+        fetch('https://n8n.kpbeducation.cloud/webhook-test/4eb9600d-11f6-44db-8782-6250f874a7ba', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(webhookData)
+        }).catch(err => console.error('Webhook 1 error:', err)),
+        fetch('https://n8n.kpbeducation.cloud/webhook/4eb9600d-11f6-44db-8782-6250f874a7ba', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(webhookData)
+        }).catch(err => console.error('Webhook 2 error:', err))
+      ]);
+
       localStorage.setItem('hasSubmittedLead', 'true');
       toast.success('Inscription réussie ! Vérifiez votre email.');
       onSubmit({ ...formData, whatsapp: phone });
