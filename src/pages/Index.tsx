@@ -4,11 +4,12 @@ import { LeadCaptureModal, LeadFormData } from "@/components/LeadCaptureModal";
 import { FAQSection } from "@/components/FAQSection";
 import { CheckCircle2, Award, Users, TrendingUp, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import guideImage from "@/assets/guide-ultime.png";
 
 // Configuration - Remplace ces URLs par tes vraies URLs
 const CONFIG = {
   youtubeUrl: "https://www.youtube.com/embed/txFGmhZhpv4",
-  guideImageUrl: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=600&fit=crop", // Remplace par {{GUIDE_IMAGE_URL}}
+  guideImageUrl: guideImage,
   testimonialsImageUrl: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=400&fit=crop", // Remplace par {{TESTIMONIALS_IMAGE_URL}}
   checkoutUrl: "https://kpb-education.maketou.com/products/le-guide-ultime-du-boursier-africain/checkout?utm_source=webinaire&utm_medium=miniapp&utm_campaign=guide_ultime"
 };
