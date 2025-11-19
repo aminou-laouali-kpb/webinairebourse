@@ -13,6 +13,8 @@ import {
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
 import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+import { toast } from "sonner";
 
 interface LeadCaptureModalProps {
   onClose: () => void;
@@ -25,6 +27,24 @@ export interface LeadFormData {
   whatsapp: string;
   country: string;
 }
+
+// Validation schema
+const leadSchema = z.object({
+  firstName: z.string()
+    .trim()
+    .min(1, "Le prénom est requis")
+    .max(100, "Le prénom ne peut pas dépasser 100 caractères")
+    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Le prénom ne peut contenir que des lettres"),
+  email: z.string()
+    .trim()
+    .email("Format d'email invalide")
+    .max(255, "L'email ne peut pas dépasser 255 caractères"),
+  whatsapp: z.string()
+    .min(10, "Le numéro WhatsApp doit contenir au moins 10 chiffres")
+    .max(20, "Le numéro WhatsApp ne peut pas dépasser 20 caractères"),
+  country: z.string()
+    .min(1, "Le pays est requis")
+});
 
 interface LeadCaptureModalProps {
   onClose: () => void;
@@ -68,30 +88,49 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.firstName || !formData.email || !phone || !formData.country) {
+    
+    // Validate form data
+    const validationResult = leadSchema.safeParse({
+      firstName: formData.firstName,
+      email: formData.email,
+      whatsapp: phone,
+      country: formData.country
+    });
+
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 
     setIsSubmitting(true);
-    
-    try {
-      const leadData = {
-        first_name: formData.firstName,
-        email: formData.email,
-        whatsapp: phone,
-        country: formData.country
-      };
 
+    try {
       const { error } = await supabase
         .from('webinar_leads')
-        .insert([leadData]);
+        .insert([
+          {
+            first_name: validationResult.data.firstName.trim(),
+            email: validationResult.data.email.trim().toLowerCase(),
+            whatsapp: validationResult.data.whatsapp,
+            country: validationResult.data.country
+          }
+        ]);
 
-      if (error) throw error;
-      
+      if (error) {
+        if (error.code === '23505') {
+          toast.error('Cet email est déjà inscrit');
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      localStorage.setItem('hasSubmittedLead', 'true');
+      toast.success('Inscription réussie ! Vérifiez votre email.');
       onSubmit({ ...formData, whatsapp: phone });
     } catch (error) {
-      console.error('Error saving lead:', error);
-      alert("Une erreur s'est produite. Veuillez réessayer.");
+      toast.error('Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setIsSubmitting(false);
     }

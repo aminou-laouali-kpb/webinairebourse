@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -10,9 +11,9 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, Mail, Phone, Globe, ArrowLeft } from "lucide-react";
+import { Loader2, Users, Mail, Phone, Globe, ArrowLeft, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface Lead {
   id: string;
@@ -26,11 +27,48 @@ interface Lead {
 export default function AdminDashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchLeads();
+    checkAuthAndRole();
   }, []);
+
+  const checkAuthAndRole = async () => {
+    try {
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error("Vous devez être connecté pour accéder à cette page");
+        navigate('/auth');
+        return;
+      }
+
+      // Check if user has admin role
+      const { data: roles, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (error || !roles) {
+        toast.error("Accès refusé. Vous devez être administrateur.");
+        navigate('/');
+        return;
+      }
+
+      setIsAdmin(true);
+      fetchLeads();
+    } catch (error) {
+      toast.error("Erreur lors de la vérification des permissions");
+      navigate('/');
+    } finally {
+      setCheckingAuth(false);
+    }
+  };
 
   const fetchLeads = async () => {
     try {
@@ -48,6 +86,12 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Déconnexion réussie");
+    navigate('/auth');
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -58,7 +102,7 @@ export default function AdminDashboard() {
     });
   };
 
-  if (loading) {
+  if (checkingAuth || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -66,18 +110,30 @@ export default function AdminDashboard() {
     );
   }
 
+  if (!isAdmin) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour à la page webinaire
-          </Button>
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour à la page webinaire
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleSignOut}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Déconnexion
+            </Button>
+          </div>
           
           <div className="flex items-center justify-between">
             <div>
