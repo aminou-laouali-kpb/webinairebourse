@@ -1,16 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { LeadCaptureModal, LeadFormData } from "@/components/LeadCaptureModal";
+import type { LeadFormData } from "@/components/LeadCaptureModal";
 import { FAQSection } from "@/components/FAQSection";
+import { YouTubeFacade } from "@/components/YouTubeFacade";
 import { CheckCircle2, Award, Users, TrendingUp, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import guideImage from "@/assets/guide-ultime.png";
+import guideImageWebp from "@/assets/guide-ultime.webp";
 
-// Configuration - Remplace ces URLs par tes vraies URLs
+const LeadCaptureModal = lazy(() =>
+  import("@/components/LeadCaptureModal").then((m) => ({ default: m.LeadCaptureModal }))
+);
+
 const CONFIG = {
-  youtubeUrl: "https://www.youtube.com/embed/txFGmhZhpv4",
-  guideImageUrl: guideImage,
-  testimonialsImageUrl: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=400&fit=crop", // Remplace par {{TESTIMONIALS_IMAGE_URL}}
+  youtubeVideoId: "txFGmhZhpv4",
+  guideImageWebp: guideImageWebp,
+  testimonialsImageUrl: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=400&fit=crop&auto=format",
   checkoutUrl: "https://kpb-education.maketou.com/products/le-guide-ultime-du-boursier-africain/checkout?utm_source=webinaire&utm_medium=miniapp&utm_campaign=guide_ultime"
 };
 
@@ -20,25 +24,31 @@ const Index = () => {
   const [showStickyBar, setShowStickyBar] = useState(false);
 
   useEffect(() => {
-    // Vérifier si l'utilisateur a déjà vu/rempli le modal
     const hasSeenModal = localStorage.getItem("kpb_lead_captured");
-    
+
     if (!hasSeenModal) {
       const timer = setTimeout(() => {
         setShowModal(true);
-      }, 5000); // Afficher après 5 secondes
+      }, 5000);
 
       return () => clearTimeout(timer);
     }
   }, []);
 
   useEffect(() => {
-    // Afficher la barre sticky après scroll
+    let ticking = false;
+
     const handleScroll = () => {
-      setShowStickyBar(window.scrollY > 600);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setShowStickyBar(window.scrollY > 600);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -48,16 +58,12 @@ const Index = () => {
   };
 
   const handleLeadSubmit = (data: LeadFormData) => {
-    // Placeholder pour l'envoi des données
     console.log("Lead data:", data);
-    
-    // TODO: Implémenter l'envoi vers ton backend
-    // sendLeadToBackend(data);
-    
+
     setShowModal(false);
     setShowConfirmation(true);
     localStorage.setItem("kpb_lead_captured", "submitted");
-    
+
     toast.success("Merci ! Tu recevras les ressources dans ta boîte email et sur WhatsApp.", {
       duration: 5000,
     });
@@ -90,20 +96,17 @@ const Index = () => {
       {/* Video Section */}
       <section className="container max-w-4xl mx-auto px-4 mb-12">
         <div className="relative w-full rounded-2xl overflow-hidden shadow-cta bg-accent aspect-video">
-          <iframe
-            src={CONFIG.youtubeUrl}
+          <YouTubeFacade
+            videoId={CONFIG.youtubeVideoId}
             title="Webinaire KPB Education"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="absolute inset-0 w-full h-full"
           />
         </div>
-        
+
         <p className="text-center text-sm text-muted-foreground mt-4">
           Si la vidéo ne s'affiche pas,{" "}
-          <a 
-            href={CONFIG.youtubeUrl.replace("/embed/", "/watch?v=")} 
-            target="_blank" 
+          <a
+            href={`https://www.youtube.com/watch?v=${CONFIG.youtubeVideoId}`}
+            target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:text-gold underline inline-flex items-center gap-1"
           >
@@ -127,7 +130,7 @@ const Index = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-10">
             Dans ce webinaire, tu vas découvrir :
           </h2>
-          
+
           <div className="grid gap-5 md:grid-cols-2">
             {[
               "Pourquoi la plupart des étudiants échouent avant même de postuler",
@@ -162,10 +165,14 @@ const Index = () => {
 
           <div className="grid md:grid-cols-2 gap-8 items-center mb-8">
             <div className="order-2 md:order-1">
-              <img 
-                src={CONFIG.guideImageUrl}
+              <img
+                src={CONFIG.guideImageWebp}
                 alt="Le Guide Ultime du Boursier Africain"
                 className="w-full max-w-sm mx-auto rounded-2xl shadow-cta"
+                loading="lazy"
+                decoding="async"
+                width={400}
+                height={400}
               />
             </div>
 
@@ -199,7 +206,7 @@ const Index = () => {
               asChild
               className="w-full md:w-auto px-12 h-16 text-xl font-bold bg-gold hover:bg-gold-light text-blue-dark shadow-cta hover:shadow-cta hover:scale-105 transition-all"
             >
-              <a 
+              <a
                 href={CONFIG.checkoutUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -218,7 +225,7 @@ const Index = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">
             Pourquoi tu peux me faire confiance
           </h2>
-          
+
           <div className="grid md:grid-cols-3 gap-6 mb-10">
             {[
               { icon: Award, text: "🎓 Boursier Chevening 2024" },
@@ -234,10 +241,14 @@ const Index = () => {
 
           {CONFIG.testimonialsImageUrl && (
             <div className="mb-6">
-              <img 
+              <img
                 src={CONFIG.testimonialsImageUrl}
                 alt="Témoignages d'étudiants accompagnés"
                 className="w-full rounded-2xl shadow-cta"
+                loading="lazy"
+                decoding="async"
+                width={800}
+                height={400}
               />
             </div>
           )}
@@ -265,7 +276,7 @@ const Index = () => {
             size="lg"
             className="px-12 h-16 text-xl font-bold bg-blue-dark hover:bg-blue-royal text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all"
           >
-            <a 
+            <a
               href={CONFIG.checkoutUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -310,10 +321,12 @@ const Index = () => {
 
       {/* Lead Capture Modal */}
       {showModal && (
-        <LeadCaptureModal 
-          onClose={handleModalClose}
-          onSubmit={handleLeadSubmit}
-        />
+        <Suspense fallback={null}>
+          <LeadCaptureModal
+            onClose={handleModalClose}
+            onSubmit={handleLeadSubmit}
+          />
+        </Suspense>
       )}
     </div>
   );
