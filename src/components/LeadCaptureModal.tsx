@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,11 +16,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { toast } from "sonner";
 
-interface LeadCaptureModalProps {
-  onClose: () => void;
-  onSubmit: (data: LeadFormData) => void;
-}
-
 export interface LeadFormData {
   firstName: string;
   email: string;
@@ -28,28 +23,30 @@ export interface LeadFormData {
   country: string;
 }
 
-// Validation schema
+interface LeadCaptureModalProps {
+  onClose: () => void;
+  onSubmit: () => void;
+}
+
+// Validation schema (mirrored server-side in the submit-lead edge function)
 const leadSchema = z.object({
-  firstName: z.string()
+  firstName: z
+    .string()
     .trim()
     .min(1, "Le prénom est requis")
     .max(100, "Le prénom ne peut pas dépasser 100 caractères")
     .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Le prénom ne peut contenir que des lettres"),
-  email: z.string()
+  email: z
+    .string()
     .trim()
     .email("Format d'email invalide")
     .max(255, "L'email ne peut pas dépasser 255 caractères"),
-  whatsapp: z.string()
+  whatsapp: z
+    .string()
     .min(10, "Le numéro WhatsApp doit contenir au moins 10 chiffres")
     .max(20, "Le numéro WhatsApp ne peut pas dépasser 20 caractères"),
-  country: z.string()
-    .min(1, "Le pays est requis")
+  country: z.string().min(1, "Le pays est requis"),
 });
-
-interface LeadCaptureModalProps {
-  onClose: () => void;
-  onSubmit: (data: LeadFormData) => void;
-}
 
 const africanCountries = [
   "Algérie", "Angola", "Bénin", "Botswana", "Burkina Faso", "Burundi",
@@ -60,123 +57,117 @@ const africanCountries = [
   "Mauritanie", "Mozambique", "Namibie", "Niger", "Nigeria", "Ouganda",
   "RD Congo", "Rwanda", "Sao Tomé-et-Principe", "Sénégal", "Seychelles",
   "Sierra Leone", "Somalie", "Soudan", "Soudan du Sud", "Tanzanie", "Tchad",
-  "Togo", "Tunisie", "Zambie", "Zimbabwe", "Autre"
+  "Togo", "Tunisie", "Zambie", "Zimbabwe", "Autre",
 ];
 
 export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) => {
-  const [formData, setFormData] = useState<LeadFormData>({
+  const [formData, setFormData] = useState<Omit<LeadFormData, "whatsapp">>({
     firstName: "",
     email: "",
-    whatsapp: "",
     country: "",
   });
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const firstFieldRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
+
+    // Simple focus trap: keep Tab focus inside the modal
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab" || !modalRef.current) return;
+      const focusables = modalRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
     document.addEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handleTab);
     document.body.style.overflow = "hidden";
-    
+    firstFieldRef.current?.focus();
+
     return () => {
       document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleTab);
       document.body.style.overflow = "unset";
     };
   }, [onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate form data
+
     const validationResult = leadSchema.safeParse({
       firstName: formData.firstName,
       email: formData.email,
       whatsapp: phone,
-      country: formData.country
+      country: formData.country,
     });
 
     if (!validationResult.success) {
-      const firstError = validationResult.error.errors[0];
-      toast.error(firstError.message);
+      toast.error(validationResult.error.errors[0].message);
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('webinar_leads')
-        .insert([
-          {
-            first_name: validationResult.data.firstName.trim(),
-            email: validationResult.data.email.trim().toLowerCase(),
-            whatsapp: validationResult.data.whatsapp,
-            country: validationResult.data.country
-          }
-        ]);
+      const { data, error } = await supabase.functions.invoke("submit-lead", {
+        body: validationResult.data,
+      });
 
-      if (error) {
-        if (error.code === '23505') {
-          toast.error('Cet email est déjà inscrit. Vous avez déjà accès au webinaire !');
-        } else {
-          throw error;
-        }
-        return;
+      if (error) throw error;
+
+      if (data?.alreadyRegistered) {
+        toast.info("Cet email est déjà inscrit — tu recevras à nouveau les ressources.");
       }
 
-      // Send data to webhooks (non-blocking)
-      const webhookData = {
-        first_name: validationResult.data.firstName.trim(),
-        email: validationResult.data.email.trim().toLowerCase(),
-        whatsapp: validationResult.data.whatsapp,
-        country: validationResult.data.country
-      };
-
-      Promise.all([
-        fetch('https://n8n.kpbeducation.cloud/webhook-test/4eb9600d-11f6-44db-8782-6250f874a7ba', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(webhookData)
-        }).catch(err => console.error('Webhook 1 error:', err)),
-        fetch('https://n8n.kpbeducation.cloud/webhook/4eb9600d-11f6-44db-8782-6250f874a7ba', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(webhookData)
-        }).catch(err => console.error('Webhook 2 error:', err))
-      ]);
-
-      localStorage.setItem('hasSubmittedLead', 'true');
-      toast.success('Inscription réussie ! Vérifiez votre email.');
-      onSubmit({ ...formData, whatsapp: phone });
-    } catch (error) {
-      toast.error('Une erreur est survenue. Veuillez réessayer.');
+      localStorage.setItem("kpb_lead_status", "submitted");
+      onSubmit();
+    } catch (err) {
+      console.error("Submit error:", err);
+      toast.error("Une erreur est survenue. Veuillez réessayer.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue-dark/80 backdrop-blur-sm animate-in fade-in duration-300"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="lead-modal-title"
     >
-      <div 
-        className="relative w-full max-w-lg bg-card rounded-2xl shadow-cta animate-in zoom-in-95 duration-300"
+      <div
+        ref={modalRef}
+        className="relative w-full max-w-lg bg-card rounded-2xl shadow-cta animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted transition-colors"
-          aria-label="Fermer"
+          className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted transition-colors z-10"
+          aria-label="Fermer la fenêtre"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="p-6 md:p-8">
           <div className="text-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+            <h2 id="lead-modal-title" className="text-2xl md:text-3xl font-bold text-foreground mb-2">
               Remplis le formulaire pour obtenir ton accès au Webinaire Gratuit !
             </h2>
             <p className="text-muted-foreground">
@@ -191,8 +182,10 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
               </Label>
               <Input
                 id="firstName"
+                ref={firstFieldRef}
                 type="text"
                 required
+                autoComplete="given-name"
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                 className="mt-1.5 h-12 border-2 focus:border-gold"
@@ -208,6 +201,7 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
                 id="email"
                 type="email"
                 required
+                autoComplete="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="mt-1.5 h-12 border-2 focus:border-gold"
@@ -223,7 +217,7 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
                 <PhoneInput
                   defaultCountry="ci"
                   value={phone}
-                  onChange={(phone) => setPhone(phone)}
+                  onChange={(v) => setPhone(v)}
                   inputClassName="h-12"
                   className="phone-input-custom"
                 />
