@@ -59,8 +59,8 @@ const Index = () => {
       {/* Hero Section */}
       <section className="container max-w-5xl mx-auto px-4 py-8 md:py-12 text-center">
         <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-foreground leading-tight mb-4">
-          Comment j'ai obtenu une bourse internationale…<br />
-          <span className="text-primary">et comment toi aussi tu peux le faire</span>
+          <span className="block">Comment j'ai obtenu une bourse internationale…</span>
+          <span className="block text-primary">et comment toi aussi tu peux le faire</span>
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
           Masterclass 100 % gratuite pour t'aider à comprendre comment candidater malin, même si tu pars de zéro.
@@ -72,9 +72,11 @@ const Index = () => {
         <div className="relative w-full rounded-2xl overflow-hidden shadow-cta bg-accent aspect-video">
           <iframe
             src={CONFIG.youtubeUrl}
-            title="Webinaire KPB Education"
+            title="Webinaire KPB Education — Bourses d'études internationales"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
             className="absolute inset-0 w-full h-full"
           />
         </div>
