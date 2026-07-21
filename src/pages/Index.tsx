@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LeadCaptureModal, LeadFormData } from "@/components/LeadCaptureModal";
+import { LeadCaptureModal } from "@/components/LeadCaptureModal";
 import { FAQSection } from "@/components/FAQSection";
 import { CheckCircle2, Award, Users, TrendingUp, ExternalLink } from "lucide-react";
-import { toast } from "sonner";
 import guideImage from "@/assets/guide-ultime.png";
 
-// Configuration - Remplace ces URLs par tes vraies URLs
 const CONFIG = {
   youtubeUrl: "https://www.youtube.com/embed/txFGmhZhpv4",
   guideImageUrl: guideImage,
-  testimonialsImageUrl: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=400&fit=crop", // Remplace par {{TESTIMONIALS_IMAGE_URL}}
-  checkoutUrl: "https://kpb-education.maketou.com/products/le-guide-ultime-du-boursier-africain/checkout?utm_source=webinaire&utm_medium=miniapp&utm_campaign=guide_ultime"
+  testimonialsImageUrl: "", // À remplir avec une vraie image de témoignages KPB
+  checkoutUrl: "https://kpb-education.maketou.com/products/le-guide-ultime-du-boursier-africain/checkout?utm_source=webinaire&utm_medium=miniapp&utm_campaign=guide_ultime",
 };
+
+const LEAD_STATUS_KEY = "kpb_lead_status";
 
 const Index = () => {
   const [showModal, setShowModal] = useState(false);
@@ -20,51 +20,31 @@ const Index = () => {
   const [showStickyBar, setShowStickyBar] = useState(false);
 
   useEffect(() => {
-    // Vérifier si l'utilisateur a déjà vu/rempli le modal
-    const hasSeenModal = localStorage.getItem("kpb_lead_captured");
-    
-    if (!hasSeenModal) {
-      const timer = setTimeout(() => {
-        setShowModal(true);
-      }, 5000); // Afficher après 5 secondes
-
+    const status = localStorage.getItem(LEAD_STATUS_KEY);
+    if (!status) {
+      const timer = setTimeout(() => setShowModal(true), 5000);
       return () => clearTimeout(timer);
     }
   }, []);
 
   useEffect(() => {
-    // Afficher la barre sticky après scroll
-    const handleScroll = () => {
-      setShowStickyBar(window.scrollY > 600);
-    };
-
+    const handleScroll = () => setShowStickyBar(window.scrollY > 600);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleModalClose = () => {
     setShowModal(false);
-    localStorage.setItem("kpb_lead_captured", "closed");
+    // Only mark as "closed" if user hasn't submitted yet
+    if (localStorage.getItem(LEAD_STATUS_KEY) !== "submitted") {
+      localStorage.setItem(LEAD_STATUS_KEY, "closed");
+    }
   };
 
-  const handleLeadSubmit = (data: LeadFormData) => {
-    // Placeholder pour l'envoi des données
-    console.log("Lead data:", data);
-    
-    // TODO: Implémenter l'envoi vers ton backend
-    // sendLeadToBackend(data);
-    
+  const handleLeadSubmit = () => {
     setShowModal(false);
     setShowConfirmation(true);
-    localStorage.setItem("kpb_lead_captured", "submitted");
-    
-    toast.success("Merci ! Tu recevras les ressources dans ta boîte email et sur WhatsApp.", {
-      duration: 5000,
-    });
-
-    setTimeout(() => {
-      setShowConfirmation(false);
-    }, 10000);
+    setTimeout(() => setShowConfirmation(false), 10000);
   };
 
   return (
