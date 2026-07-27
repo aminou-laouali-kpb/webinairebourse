@@ -1,129 +1,64 @@
-## Audit complet + refactor de la mini-app webinaire
+## Améliorations proposées pour la landing webinaire
 
-Plan structuré en 4 lots. Chaque lot est indépendant et peut être validé séparément.
-
----
-
-### Lot 1 — Nettoyage code mort & bugs
-
-**`src/components/LeadCaptureModal.tsx`**
-- Supprimer l'interface `LeadCaptureModalProps` dupliquée (lignes 49-52)
-- Retirer l'appel `onSubmit({ ...formData, whatsapp: phone })` redondant : les données sont déjà envoyées à Supabase + webhooks, `onSubmit` sert juste à fermer le modal → simplifier en `onSubmit()`
-
-**`src/pages/Index.tsx`**
-- Supprimer le `console.log("Lead data:", data)` et le commentaire TODO obsolète (lignes 51-55) — le backend est déjà branché
-- Unifier les clés localStorage : `hasSubmittedLead` (modal) + `kpb_lead_captured` (page) → une seule clé `kpb_lead_status` avec valeurs `"submitted" | "closed"`
-- Simplifier `handleLeadSubmit` : ne garde que la fermeture modal + toast + confirmation
-
-**Cohérence pays / téléphone**
-- Le `Select` pays ne liste que l'Afrique + "Autre", mais le `PhoneInput` accepte tous les pays. Deux options :
-  - **A (recommandé)** : Garder l'Afrique + "Autre" (cible marketing = étudiants africains, cohérent avec le contenu)
-  - **B** : Passer à liste mondiale complète
-  - → À valider en implémentation, je pars sur **A** (statu quo, juste corriger le doublon si présent).
+Le socle est propre (edge function sécurisée, RLS, SEO de base, focus trap). Voici ce qui manque vraiment, classé par impact business.
 
 ---
 
-### Lot 2 — Fiabilité & sécurité des webhooks
+### 1. Conversion — le plus gros levier
 
-**Problème actuel :** URLs webhook n8n exposées côté client (visibles dans le bundle), n'importe qui peut les spammer avec `curl`. Pas de retry, erreurs silencieuses.
+- **Aucun CTA au-dessus de la ligne de flottaison** : le hero n'a que du texte. Ajouter un bouton "Regarder le webinaire" (scroll vers la vidéo) + un bouton secondaire "Recevoir les ressources gratuites" (ouvre le modal).
+- **Le modal ne peut plus être rouvert** : une fois fermé, aucun moyen de s'inscrire aux ressources gratuites. Ajouter un lien/bouton persistant "Recevoir le guide gratuit" (sous la vidéo + dans le footer).
+- **Urgence/rareté absente** : le prix annonce "durée limitée" sans compte à rebours. Ajouter un countdown (ex. 24h, persisté en localStorage) dans le bloc offre et dans la sticky bar.
+- **Sticky bar mobile uniquement** (`md:hidden`) : sur desktop, après scroll, aucun CTA visible. La rendre visible sur desktop en variante fine.
+- **Section garantie/remboursement absente** : ajouter un bandeau "Satisfait ou remboursé 7 jours" (si applicable) — lève majeure d'objection sur un achat à 4 999 XOF.
+- **Exit-intent** : déclencher le modal au mouvement de souris vers la fermeture d'onglet (desktop), en plus des 5 s.
 
-**Solution :** Créer une edge function `submit-lead` qui :
-1. Reçoit `{firstName, email, whatsapp, country}` du client
-2. Re-valide avec Zod côté serveur
-3. Insère dans `webinar_leads` (via service role, respecte la contrainte unique email)
-4. Envoie aux 2 webhooks n8n (test + prod, gardés comme demandé) avec `Promise.allSettled` + timeout 5s
-5. Logue les échecs webhook dans les logs edge function
-6. Retourne `{ success, alreadyRegistered }` au client
+### 2. Tracking — actuellement zéro mesure
 
-**Côté client** (`LeadCaptureModal.tsx`) :
-- Remplacer l'insert Supabase direct + les 2 `fetch` par un seul `supabase.functions.invoke('submit-lead', {...})`
-- Gérer `alreadyRegistered` → toast informatif
-- Les URLs webhook disparaissent du bundle JS
+Rien ne mesure la performance de la page. Ajouter :
+- Table `page_events` (ou réutiliser un event log) + envoi d'événements : `page_view`, `video_play`, `modal_open`, `lead_submit`, `checkout_click`.
+- Suivi des clics checkout avec `utm` déjà présents dans l'URL Maketou.
+- Compteurs dans `/admin` : vues, taux de soumission, clics achat, taux de conversion.
+- Option : Meta Pixel / GA4 si tu fais de la pub payante (à confirmer).
 
-**Bénéfices :**
-- URLs webhook cachées (secrets côté serveur si on veut, mais pas obligatoire ici — les URLs restent en clair dans l'edge function)
-- Validation double (client + serveur)
-- Logs centralisés
+### 3. UX & formulaire
 
----
+- **Double saisie du pays** : l'utilisateur choisit l'indicatif dans `PhoneInput` puis re-sélectionne le pays dans le `Select`. Dériver le pays automatiquement de l'indicatif et supprimer le champ (moins de friction = plus de leads).
+- **Erreurs affichées uniquement en toast** : afficher aussi l'erreur sous le champ concerné.
+- **Écran de succès dans le modal** au lieu d'une fermeture immédiate + bandeau vert plus bas dans la page (que l'utilisateur ne voit pas forcément).
+- **Popup à 5 s trop tôt** : la déclencher plutôt au scroll (~30 %) ou après 20-30 s pour ne pas interrompre le démarrage de la vidéo.
 
-### Lot 3 — SEO & Performance
+### 4. Contenu & crédibilité
 
-**`index.html`**
-- Vérifier/ajouter `<title>` et `<meta name="description">` spécifiques au webinaire (pas les defaults Lovable)
-- Ajouter `og:title`, `og:description`, `og:type=website`, `twitter:card=summary_large_image`
-- Ajouter JSON-LD `Event` (webinaire) pour rich snippets Google
-- `<link rel="canonical" href="https://webinar1.kpbeducation.cloud/" />`
+- **Aucun témoignage affiché** (`testimonialsImageUrl` vide) : ajouter 3 témoignages texte + prénom/pays/bourse obtenue. C'est le bloc le plus manquant pour la crédibilité.
+- **Section "À propos de moi"** courte avec photo — actuellement seulement 3 badges.
+- **Section "Pour qui / pas pour qui"** — qualifie le visiteur et augmente la conversion.
+- **Lien "Politique de confidentialité"** pointe sur `#` (mort). Créer une vraie page `/confidentialite`.
 
-**`src/pages/Index.tsx`**
-- Iframe YouTube : ajouter `loading="lazy"` + `referrerpolicy="strict-origin-when-cross-origin"`
-- Convertir le `<br>` du H1 en espace + span pour meilleure sémantique + responsive
-- Ajouter `alt` descriptifs manquants (déjà OK sur guide, vérifier tout)
+### 5. Performance & technique
 
-**Optionnel** : lazy-load l'iframe YouTube via une image thumbnail cliquable (grosse économie de bande passante mobile — Google recommande ce pattern). À décider.
-
----
-
-### Lot 4 — UX & cohérence
-
-- **Remplacer le placeholder Unsplash** des témoignages par une image générée ou masquer la section tant qu'aucune image réelle n'est fournie (actuellement affiche des inconnus, contre-productif pour la crédibilité)
-- **Message de confirmation dupliqué** : le toast Sonner + le bloc vert sous vidéo affichent le même message → garder uniquement le bloc vert sous vidéo (plus visible, persistant 10s) et retirer le toast redondant
-- **Séparateur visuel** entre l'indicatif téléphone et l'input (actuellement collés)
-- **Focus trap** dans le modal : quand on Tab dans le modal, on peut sortir vers la page derrière — ajouter un focus trap simple
+- **YouTube chargé en dur** : ~500 Ko de JS avant même le clic. Remplacer par une façade (miniature `img` + bouton play qui injecte l'iframe). Gros gain mobile.
+- **`public/sitemap.xml` absent** — à créer.
+- **Pas de page 404 stylée cohérente** avec la charte (à vérifier).
+- **`og:image` pointe encore vers l'image par défaut Lovable** — à remplacer par un visuel du webinaire.
 
 ---
 
 ### Détails techniques
 
-**Edge function `submit-lead`** — squelette :
-
-```typescript
-// supabase/functions/submit-lead/index.ts
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
-import { createClient } from 'npm:@supabase/supabase-js@2'
-import { z } from 'npm:zod@3'
-
-const Schema = z.object({
-  firstName: z.string().trim().min(1).max(100),
-  email: z.string().trim().email().max(255).toLowerCase(),
-  whatsapp: z.string().min(10).max(20),
-  country: z.string().min(1),
-})
-
-const WEBHOOKS = [
-  'https://n8n.kpbeducation.cloud/webhook-test/4eb9600d-11f6-44db-8782-6250f874a7ba',
-  'https://n8n.kpbeducation.cloud/webhook/4eb9600d-11f6-44db-8782-6250f874a7ba',
-]
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
-  // ... validate, insert, fanout webhooks avec Promise.allSettled + AbortSignal.timeout(5000)
-})
-```
-
-**Diagramme du flux après refactor :**
-
-```text
-[Client Form] --invoke--> [Edge Function submit-lead]
-                              |
-                              +--> [Supabase webinar_leads INSERT]
-                              +--> [n8n webhook-test/... POST]
-                              +--> [n8n webhook/... POST]
-                              |
-                              <-- { success, alreadyRegistered }
-```
+- Événements analytics : nouvelle table `public.page_events (id, event_type, session_id, metadata jsonb, created_at)` avec GRANT + policy INSERT anon, lecture réservée aux admins via `has_role`.
+- Façade YouTube : composant `src/components/YouTubeFacade.tsx`, miniature `https://i.ytimg.com/vi/txFGmhZhpv4/maxresdefault.jpg`, iframe injecté au clic avec `autoplay=1`.
+- Countdown : `src/components/CountdownTimer.tsx`, deadline stockée en localStorage à la première visite.
+- Dérivation du pays : `react-international-phone` expose le pays via `onChange(value, { country })` — mapper vers un nom FR et supprimer le `Select`.
 
 ---
 
-### Ordre d'implémentation
+### Ordre suggéré
 
-1. Lot 1 (nettoyage) — 5 min, sans risque
-2. Lot 3 (SEO/perf) — 5 min, sans risque
-3. Lot 4 (UX) — 10 min
-4. Lot 2 (edge function webhooks) — 15 min, à tester
+1. Conversion (CTA hero, réouverture modal, countdown, sticky desktop)
+2. Contenu (témoignages, à propos, page confidentialité)
+3. Formulaire (suppression du champ pays, écran de succès)
+4. Tracking + dashboard
+5. Performance (façade YouTube, sitemap, og:image)
 
-**Hors scope (à faire séparément si tu veux) :**
-- Analytics conversion (nombre de vues, taux de soumission, clics achat)
-- Rate limiting IP côté edge function
-- CAPTCHA
-- Extraction de `CONFIG` (YouTube URL, images) vers table Supabase `settings` éditable depuis l'admin
+Dis-moi quels lots tu veux, ou je pars sur les 1-2-3 (le plus rentable, sans changement backend).
