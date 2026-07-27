@@ -15,7 +15,7 @@ const CONFIG = {
   youtubeId: "txFGmhZhpv4",
   guideImageUrl: guideImage,
   checkoutUrl:
-    "https://kpb-education.maketou.com/products/le-guide-ultime-du-boursier-africain/checkout?utm_source=webinaire&utm_medium=miniapp&utm_campaign=guide_ultime",
+    "https://www.pay.moneyfusion.net/le-guide-ultime-du-boursier_1758540657148/",
 };
 
 const LEAD_STATUS_KEY = "kpb_lead_status";
