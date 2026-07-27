@@ -255,7 +255,7 @@ const Index = () => {
 
             <Button
               asChild
-              className="w-full md:w-auto px-12 h-16 text-xl font-bold bg-gold hover:bg-gold-light text-blue-dark shadow-cta hover:shadow-cta hover:scale-105 transition-all"
+              className="w-full md:w-auto px-4 md:px-12 h-auto min-h-16 py-4 text-lg md:text-xl font-bold whitespace-normal bg-gold hover:bg-gold-light text-blue-dark shadow-cta hover:shadow-cta md:hover:scale-105 transition-all"
             >
               <a
                 href={CONFIG.checkoutUrl}
@@ -326,7 +326,7 @@ const Index = () => {
           <Button
             asChild
             size="lg"
-            className="px-12 h-16 text-xl font-bold bg-blue-dark hover:bg-blue-royal text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+            className="w-full md:w-auto px-4 md:px-12 h-auto min-h-16 py-4 text-lg md:text-xl font-bold whitespace-normal bg-blue-dark hover:bg-blue-royal text-primary-foreground shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
           >
             <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent("checkout_click", { location: "final_cta" })}>
               Obtenir mon guide maintenant
