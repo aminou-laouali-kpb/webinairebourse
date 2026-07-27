@@ -15,7 +15,7 @@ const CONFIG = {
   youtubeId: "txFGmhZhpv4",
   guideImageUrl: guideImage,
   checkoutUrl:
-    "https://kpb-education.maketou.com/products/le-guide-ultime-du-boursier-africain/checkout?utm_source=webinaire&utm_medium=miniapp&utm_campaign=guide_ultime",
+    "https://www.pay.moneyfusion.net/le-guide-ultime-du-boursier_1758540657148/",
 };
 
 const LEAD_STATUS_KEY = "kpb_lead_status";
@@ -255,7 +255,7 @@ const Index = () => {
 
             <Button
               asChild
-              className="w-full md:w-auto px-12 h-16 text-xl font-bold bg-gold hover:bg-gold-light text-blue-dark shadow-cta hover:shadow-cta hover:scale-105 transition-all"
+              className="w-full md:w-auto px-4 md:px-12 h-auto min-h-16 py-4 text-lg md:text-xl font-bold whitespace-normal bg-gold hover:bg-gold-light text-blue-dark shadow-cta hover:shadow-cta md:hover:scale-105 transition-all"
             >
               <a
                 href={CONFIG.checkoutUrl}
@@ -326,7 +326,7 @@ const Index = () => {
           <Button
             asChild
             size="lg"
-            className="px-12 h-16 text-xl font-bold bg-blue-dark hover:bg-blue-royal text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+            className="w-full md:w-auto px-4 md:px-12 h-auto min-h-16 py-4 text-lg md:text-xl font-bold whitespace-normal bg-blue-dark hover:bg-blue-royal text-primary-foreground shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
           >
             <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent("checkout_click", { location: "final_cta" })}>
               Obtenir mon guide maintenant
@@ -358,19 +358,21 @@ const Index = () => {
 
       {/* Sticky Bottom Bar */}
       {showStickyBar && (
-        <div className="fixed bottom-0 left-0 right-0 bg-blue-dark text-primary-foreground shadow-sticky p-3 md:py-2 z-40 animate-in slide-in-from-bottom duration-300">
-          <div className="container max-w-4xl mx-auto flex items-center justify-between gap-3">
-            <div className="text-left">
-              <p className="text-xs font-medium opacity-90">
-                Le Guide Ultime • fin de l'offre dans <CountdownTimer variant="compact" />
+        <div className="fixed bottom-0 left-0 right-0 bg-blue-dark text-primary-foreground shadow-sticky px-3 py-2 md:py-2 z-40 animate-in slide-in-from-bottom duration-300">
+          <div className="container max-w-4xl mx-auto px-0 flex items-center justify-between gap-2 sm:gap-3">
+            <div className="text-left min-w-0 flex-1">
+              <p className="text-[11px] sm:text-xs font-medium opacity-90 truncate">
+                <span className="hidden sm:inline">Le Guide Ultime • fin de l'offre dans </span>
+                <span className="sm:hidden">Fin dans </span>
+                <CountdownTimer variant="compact" />
               </p>
-              <p className="text-lg font-black text-gold leading-tight">
-                9 000 XOF <span className="text-xs font-normal line-through opacity-60">19 999</span>
+              <p className="text-base sm:text-lg font-black text-gold leading-tight whitespace-nowrap">
+                9 000 XOF <span className="text-[10px] sm:text-xs font-normal line-through opacity-60">19 999</span>
               </p>
             </div>
             <Button
               asChild
-              className="bg-gold hover:bg-gold-light text-blue-dark font-bold shadow-cta whitespace-nowrap"
+              className="bg-gold hover:bg-gold-light text-blue-dark font-bold shadow-cta whitespace-nowrap text-sm px-4 sm:text-base sm:px-6 flex-shrink-0"
             >
               <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent("checkout_click", { location: "sticky_bar" })}>
                 Acheter maintenant
