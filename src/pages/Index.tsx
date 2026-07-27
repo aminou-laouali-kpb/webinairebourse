@@ -44,11 +44,13 @@ const Index = () => {
   useEffect(() => {
     if (localStorage.getItem(LEAD_STATUS_KEY)) return;
 
-    const trigger = () => {
+    const trigger = (source: string) => () => {
       if (autoOpenDone.current) return;
       autoOpenDone.current = true;
       setShowModal(true);
+      trackEvent("modal_open", { source });
     };
+
 
     const timer = setTimeout(trigger, 25000);
     const onScroll = () => {
