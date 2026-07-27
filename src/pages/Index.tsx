@@ -52,14 +52,15 @@ const Index = () => {
     };
 
 
-    const timer = setTimeout(trigger, 25000);
+    const timer = setTimeout(trigger("timer_25s"), 25000);
     const onScroll = () => {
       const progress = window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight);
-      if (progress > 0.3) trigger();
+      if (progress > 0.3) trigger("scroll_30")();
     };
     const onExitIntent = (e: MouseEvent) => {
-      if (e.clientY <= 0) trigger();
+      if (e.clientY <= 0) trigger("exit_intent")();
     };
+
 
     window.addEventListener("scroll", onScroll, { passive: true });
     document.addEventListener("mouseleave", onExitIntent);
