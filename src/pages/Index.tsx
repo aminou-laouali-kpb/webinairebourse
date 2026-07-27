@@ -136,6 +136,7 @@ const Index = () => {
           <YouTubeFacade
             videoId={CONFIG.youtubeId}
             title="Webinaire KPB Education — Bourses d'études internationales"
+            onPlay={() => trackEvent("video_play")}
           />
         </div>
 
