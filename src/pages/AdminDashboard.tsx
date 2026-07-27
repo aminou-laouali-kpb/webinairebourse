@@ -253,6 +253,56 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
+        <h2 className="text-xl font-bold text-foreground mb-4">Performance de la page</h2>
+        <div className="grid gap-4 md:grid-cols-4 mb-4">
+          {[
+            { title: "Vues de page", value: stats.page_view, icon: Eye, hint: `${uniqueVisitors} sessions uniques` },
+            { title: "Lectures vidéo", value: stats.video_play, icon: PlayCircle, hint: `${pct(stats.video_play, stats.page_view)} des vues` },
+            { title: "Formulaires ouverts", value: stats.modal_open, icon: Mail, hint: `${pct(stats.modal_open, stats.page_view)} des vues` },
+            { title: "Clics achat", value: stats.checkout_click, icon: MousePointerClick, hint: `${pct(stats.checkout_click, stats.page_view)} des vues` },
+          ].map((item) => (
+            <Card key={item.title}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
+                <item.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{item.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">{item.hint}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Taux d'inscription</CardTitle>
+              <Percent className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pct(stats.lead_submit, stats.page_view)}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.lead_submit} inscription(s) sur {stats.page_view} vue(s)
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Formulaire ouvert → inscrit</CardTitle>
+              <Percent className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pct(stats.lead_submit, stats.modal_open)}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Efficacité du formulaire de capture
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+
         <Card>
           <CardHeader>
             <CardTitle>Liste des inscrits</CardTitle>
