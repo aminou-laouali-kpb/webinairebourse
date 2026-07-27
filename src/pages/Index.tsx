@@ -259,6 +259,7 @@ const Index = () => {
             >
               <a
                 href={CONFIG.checkoutUrl}
+                onClick={() => trackEvent("checkout_click", { location: "offer" })}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Obtenir le Guide Ultime du Boursier Africain pour 4999 XOF"
@@ -327,7 +328,7 @@ const Index = () => {
             size="lg"
             className="px-12 h-16 text-xl font-bold bg-blue-dark hover:bg-blue-royal text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all"
           >
-            <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer">
+            <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent("checkout_click", { location: "final_cta" })}>
               Obtenir mon guide maintenant
             </a>
           </Button>
@@ -371,7 +372,7 @@ const Index = () => {
               asChild
               className="bg-gold hover:bg-gold-light text-blue-dark font-bold shadow-cta whitespace-nowrap"
             >
-              <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer">
+              <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent("checkout_click", { location: "sticky_bar" })}>
                 Acheter maintenant
               </a>
             </Button>
