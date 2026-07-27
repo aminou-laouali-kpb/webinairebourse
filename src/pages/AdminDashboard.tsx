@@ -80,7 +80,7 @@ export default function AdminDashboard() {
       }
 
       setIsAdmin(true);
-      fetchLeads();
+      await Promise.all([fetchLeads(), fetchStats()]);
     } catch (error) {
       toast.error("Erreur lors de la vérification des permissions");
       navigate('/');
@@ -104,6 +104,33 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
+
+  const fetchStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('page_events')
+        .select('event_type, session_id')
+        .limit(20000);
+
+      if (error) throw error;
+
+      const counts = { ...EMPTY_STATS };
+      const sessions = new Set<string>();
+      for (const row of data ?? []) {
+        const key = row.event_type as keyof EventStats;
+        if (key in counts) counts[key] += 1;
+        if (row.session_id) sessions.add(row.session_id);
+      }
+      setStats(counts);
+      setUniqueVisitors(sessions.size);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const pct = (num: number, den: number) =>
+    den > 0 ? `${((num / den) * 100).toFixed(1)} %` : "—";
+
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
