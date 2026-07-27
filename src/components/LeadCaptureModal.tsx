@@ -1,15 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import { X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,26 +41,30 @@ const leadSchema = z.object({
   country: z.string().min(1, "Le pays est requis"),
 });
 
-const africanCountries = [
-  "Algérie", "Angola", "Bénin", "Botswana", "Burkina Faso", "Burundi",
-  "Cameroun", "Cap-Vert", "Centrafrique", "Comores", "Congo", "Côte d'Ivoire",
-  "Djibouti", "Égypte", "Érythrée", "Eswatini", "Éthiopie", "Gabon", "Gambie",
-  "Ghana", "Guinée", "Guinée-Bissau", "Guinée équatoriale", "Kenya", "Lesotho",
-  "Liberia", "Libye", "Madagascar", "Malawi", "Mali", "Maroc", "Maurice",
-  "Mauritanie", "Mozambique", "Namibie", "Niger", "Nigeria", "Ouganda",
-  "RD Congo", "Rwanda", "Sao Tomé-et-Principe", "Sénégal", "Seychelles",
-  "Sierra Leone", "Somalie", "Soudan", "Soudan du Sud", "Tanzanie", "Tchad",
-  "Togo", "Tunisie", "Zambie", "Zimbabwe", "Autre",
-];
+type FieldErrors = Partial<Record<"firstName" | "email" | "whatsapp" | "country", string>>;
+
+const countryNames =
+  typeof Intl !== "undefined" && "DisplayNames" in Intl
+    ? new Intl.DisplayNames(["fr"], { type: "region" })
+    : null;
+
+const countryNameFromIso = (iso2?: string) => {
+  if (!iso2) return "";
+  const upper = iso2.toUpperCase();
+  try {
+    return countryNames?.of(upper) ?? upper;
+  } catch {
+    return upper;
+  }
+};
 
 export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) => {
-  const [formData, setFormData] = useState<Omit<LeadFormData, "whatsapp">>({
-    firstName: "",
-    email: "",
-    country: "",
-  });
+  const [formData, setFormData] = useState({ firstName: "", email: "" });
   const [phone, setPhone] = useState("");
+  const [countryIso, setCountryIso] = useState("ci");
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [succeeded, setSucceeded] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
 
@@ -113,14 +110,20 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
       firstName: formData.firstName,
       email: formData.email,
       whatsapp: phone,
-      country: formData.country,
+      country: countryNameFromIso(countryIso),
     });
 
     if (!validationResult.success) {
-      toast.error(validationResult.error.errors[0].message);
+      const fieldErrors: FieldErrors = {};
+      for (const issue of validationResult.error.errors) {
+        const key = issue.path[0] as keyof FieldErrors;
+        if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
       return;
     }
 
+    setErrors({});
     setIsSubmitting(true);
 
     try {
@@ -135,7 +138,7 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
       }
 
       localStorage.setItem("kpb_lead_status", "submitted");
-      onSubmit();
+      setSucceeded(true);
     } catch (err) {
       console.error("Submit error:", err);
       toast.error("Une erreur est survenue. Veuillez réessayer.");
@@ -147,7 +150,7 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue-dark/80 backdrop-blur-sm animate-in fade-in duration-300"
-      onClick={onClose}
+      onClick={succeeded ? onSubmit : onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="lead-modal-title"
@@ -158,108 +161,127 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          onClick={onClose}
+          onClick={succeeded ? onSubmit : onClose}
           className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted transition-colors z-10"
           aria-label="Fermer la fenêtre"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="p-6 md:p-8">
-          <div className="text-center mb-6">
-            <h2 id="lead-modal-title" className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              Remplis le formulaire pour obtenir ton accès au Webinaire Gratuit !
+        {succeeded ? (
+          <div className="p-8 text-center">
+            <CheckCircle2 className="w-16 h-16 text-gold mx-auto mb-4" aria-hidden="true" />
+            <h2 id="lead-modal-title" className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+              C'est confirmé, {formData.firstName} ! 🎉
             </h2>
-            <p className="text-muted-foreground">
-              Nous t'enverrons aussi le Guide des 10 Bourses à ne pas râter en 2026 !
+            <p className="text-muted-foreground mb-6">
+              Tu vas recevoir ton accès au webinaire et le Guide des 10 Bourses par email et sur
+              WhatsApp. Pense à vérifier tes spams.
             </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="firstName" className="text-foreground font-semibold">
-                Prénom <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="firstName"
-                ref={firstFieldRef}
-                type="text"
-                required
-                autoComplete="given-name"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                className="mt-1.5 h-12 border-2 focus:border-gold"
-                placeholder="Ton prénom"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="email" className="text-foreground font-semibold">
-                Email <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                autoComplete="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="mt-1.5 h-12 border-2 focus:border-gold"
-                placeholder="exemple@email.com"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="whatsapp" className="text-foreground font-semibold">
-                WhatsApp <span className="text-destructive">*</span>
-              </Label>
-              <div className="mt-1.5">
-                <PhoneInput
-                  defaultCountry="ci"
-                  value={phone}
-                  onChange={(v) => setPhone(v)}
-                  inputClassName="h-12"
-                  className="phone-input-custom"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="country" className="text-foreground font-semibold">
-                Pays <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.country}
-                onValueChange={(value) => setFormData({ ...formData, country: value })}
-                required
-              >
-                <SelectTrigger className="mt-1.5 h-12 border-2 focus:border-gold bg-background">
-                  <SelectValue placeholder="Sélectionne ton pays" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-2 max-h-[300px]">
-                  {africanCountries.map((country) => (
-                    <SelectItem key={country} value={country} className="cursor-pointer">
-                      {country}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <p className="text-xs text-muted-foreground text-center py-2">
-              🔒 Tes informations sont confidentielles. Tu peux te désinscrire à tout moment.
-            </p>
-
             <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-14 text-lg font-bold bg-gold hover:bg-gold-light text-blue-dark shadow-cta transition-all disabled:opacity-50"
-              aria-label="Obtenir les ressources gratuites"
+              onClick={onSubmit}
+              className="w-full h-14 text-lg font-bold bg-gold hover:bg-gold-light text-blue-dark shadow-cta"
             >
-              {isSubmitting ? "Envoi en cours..." : "Je veux les ressources 🎁"}
+              Regarder le webinaire maintenant ▶️
             </Button>
-          </form>
-        </div>
+          </div>
+        ) : (
+          <div className="p-6 md:p-8">
+            <div className="text-center mb-6">
+              <h2 id="lead-modal-title" className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                Remplis le formulaire pour obtenir ton accès au Webinaire Gratuit !
+              </h2>
+              <p className="text-muted-foreground">
+                Nous t'enverrons aussi le Guide des 10 Bourses à ne pas râter en 2026 !
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              <div>
+                <Label htmlFor="firstName" className="text-foreground font-semibold">
+                  Prénom <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="firstName"
+                  ref={firstFieldRef}
+                  type="text"
+                  autoComplete="given-name"
+                  aria-invalid={!!errors.firstName}
+                  aria-describedby={errors.firstName ? "firstName-error" : undefined}
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  className="mt-1.5 h-12 border-2 focus:border-gold"
+                  placeholder="Ton prénom"
+                />
+                {errors.firstName && (
+                  <p id="firstName-error" className="text-sm text-destructive mt-1.5">
+                    {errors.firstName}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="email" className="text-foreground font-semibold">
+                  Email <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? "email-error" : undefined}
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="mt-1.5 h-12 border-2 focus:border-gold"
+                  placeholder="exemple@email.com"
+                />
+                {errors.email && (
+                  <p id="email-error" className="text-sm text-destructive mt-1.5">
+                    {errors.email}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="whatsapp" className="text-foreground font-semibold">
+                  WhatsApp <span className="text-destructive">*</span>
+                </Label>
+                <div className="mt-1.5">
+                  <PhoneInput
+                    inputProps={{ id: "whatsapp" }}
+                    defaultCountry="ci"
+                    value={phone}
+                    onChange={(value, meta) => {
+                      setPhone(value);
+                      if (meta?.country?.iso2) setCountryIso(meta.country.iso2);
+                    }}
+                    inputClassName="h-12"
+                    className="phone-input-custom"
+                  />
+                </div>
+                {errors.whatsapp && (
+                  <p className="text-sm text-destructive mt-1.5">{errors.whatsapp}</p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Pays détecté : <span className="font-semibold">{countryNameFromIso(countryIso)}</span>
+                </p>
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center py-2">
+                🔒 Tes informations sont confidentielles. Tu peux te désinscrire à tout moment.
+              </p>
+
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-14 text-lg font-bold bg-gold hover:bg-gold-light text-blue-dark shadow-cta transition-all disabled:opacity-50"
+                aria-label="Obtenir les ressources gratuites"
+              >
+                {isSubmitting ? "Envoi en cours..." : "Je veux les ressources 🎁"}
+              </Button>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );
