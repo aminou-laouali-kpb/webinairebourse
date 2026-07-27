@@ -98,7 +98,7 @@ const Index = () => {
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-primary via-blue-dark to-primary text-primary-foreground py-3 text-center">
         <p className="text-sm md:text-base font-semibold px-4">
-          🎓 Webinaire Gratuit • Bourses d'études 2025–2026
+          🎓 Webinaire Gratuit • Bourses d'études 2026-2027
         </p>
       </div>
 
@@ -230,7 +230,7 @@ const Index = () => {
               <h3 className="text-xl font-bold text-foreground mb-4">Ce qui est inclus :</h3>
               {[
                 "📘 Guide PDF pas-à-pas (FR/EN)",
-                "📊 Tableur 30 bourses 2025–2026 (Licence, Master, Doctorat)",
+                "📊 Tableur 30 bourses 2026-2027 (Licence, Master, Doctorat)",
                 "📝 5 modèles de CV + 5 lettres de motivation FR/EN",
                 "✉️ 4 lettres de recommandation FR/EN",
                 "✅ Checklists + mini-guide pour améliorer ton anglais",
@@ -245,8 +245,8 @@ const Index = () => {
 
           <div className="bg-card rounded-2xl p-6 md:p-8 text-center border-2 border-border">
             <div className="mb-5">
-              <p className="text-muted-foreground line-through text-xl mb-2">14 999 XOF</p>
-              <p className="text-5xl md:text-6xl font-black text-gold mb-2">4 999 XOF</p>
+              <p className="text-muted-foreground line-through text-xl mb-2">19 999 XOF</p>
+              <p className="text-5xl md:text-6xl font-black text-gold mb-2">9 000 XOF</p>
               <p className="text-sm text-destructive font-semibold mb-4">
                 ⚡ Offre spéciale participants au webinaire — se termine dans :
               </p>
@@ -262,7 +262,7 @@ const Index = () => {
                 onClick={() => trackEvent("checkout_click", { location: "offer" })}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Obtenir le Guide Ultime du Boursier Africain pour 4999 XOF"
+                aria-label="Obtenir le Guide Ultime du Boursier Africain pour 9000 XOF"
               >
                 Obtenir le Guide maintenant 🚀
               </a>
@@ -365,7 +365,7 @@ const Index = () => {
                 Le Guide Ultime • fin de l'offre dans <CountdownTimer variant="compact" />
               </p>
               <p className="text-lg font-black text-gold leading-tight">
-                4 999 XOF <span className="text-xs font-normal line-through opacity-60">14 999</span>
+                9 000 XOF <span className="text-xs font-normal line-through opacity-60">19 999</span>
               </p>
             </div>
             <Button
