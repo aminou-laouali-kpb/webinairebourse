@@ -8,6 +8,7 @@ import { WhoIsFor } from "@/components/WhoIsFor";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { YouTubeFacade } from "@/components/YouTubeFacade";
 import { CheckCircle2, Award, Users, TrendingUp, ExternalLink, ShieldCheck, Gift } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 import guideImage from "@/assets/guide-ultime.png";
 
 const CONFIG = {
@@ -25,11 +26,19 @@ const Index = () => {
   const [showStickyBar, setShowStickyBar] = useState(false);
   const autoOpenDone = useRef(false);
 
-  const openModal = useCallback(() => setShowModal(true), []);
+  const openModal = useCallback((source: string) => {
+    setShowModal(true);
+    trackEvent("modal_open", { source });
+  }, []);
 
   const scrollToVideo = () => {
     document.getElementById("webinaire")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  useEffect(() => {
+    trackEvent("page_view", { path: window.location.pathname });
+  }, []);
+
 
   // Auto-open once: after 25s or at 30% scroll, whichever comes first
   useEffect(() => {
