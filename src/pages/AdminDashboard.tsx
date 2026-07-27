@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, Mail, Phone, Globe, ArrowLeft, LogOut } from "lucide-react";
+import { Loader2, Users, Mail, Phone, Globe, ArrowLeft, LogOut, Eye, PlayCircle, MousePointerClick, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -24,12 +24,31 @@ interface Lead {
   created_at: string;
 }
 
+interface EventStats {
+  page_view: number;
+  video_play: number;
+  modal_open: number;
+  lead_submit: number;
+  checkout_click: number;
+}
+
+const EMPTY_STATS: EventStats = {
+  page_view: 0,
+  video_play: 0,
+  modal_open: 0,
+  lead_submit: 0,
+  checkout_click: 0,
+};
+
 export default function AdminDashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [stats, setStats] = useState<EventStats>(EMPTY_STATS);
+  const [uniqueVisitors, setUniqueVisitors] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const navigate = useNavigate();
+
 
   useEffect(() => {
     checkAuthAndRole();
@@ -61,7 +80,7 @@ export default function AdminDashboard() {
       }
 
       setIsAdmin(true);
-      fetchLeads();
+      await Promise.all([fetchLeads(), fetchStats()]);
     } catch (error) {
       toast.error("Erreur lors de la vérification des permissions");
       navigate('/');
@@ -85,6 +104,33 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
+
+  const fetchStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('page_events')
+        .select('event_type, session_id')
+        .limit(20000);
+
+      if (error) throw error;
+
+      const counts = { ...EMPTY_STATS };
+      const sessions = new Set<string>();
+      for (const row of data ?? []) {
+        const key = row.event_type as keyof EventStats;
+        if (key in counts) counts[key] += 1;
+        if (row.session_id) sessions.add(row.session_id);
+      }
+      setStats(counts);
+      setUniqueVisitors(sessions.size);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const pct = (num: number, den: number) =>
+    den > 0 ? `${((num / den) * 100).toFixed(1)} %` : "—";
+
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -206,6 +252,56 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <h2 className="text-xl font-bold text-foreground mb-4">Performance de la page</h2>
+        <div className="grid gap-4 md:grid-cols-4 mb-4">
+          {[
+            { title: "Vues de page", value: stats.page_view, icon: Eye, hint: `${uniqueVisitors} sessions uniques` },
+            { title: "Lectures vidéo", value: stats.video_play, icon: PlayCircle, hint: `${pct(stats.video_play, stats.page_view)} des vues` },
+            { title: "Formulaires ouverts", value: stats.modal_open, icon: Mail, hint: `${pct(stats.modal_open, stats.page_view)} des vues` },
+            { title: "Clics achat", value: stats.checkout_click, icon: MousePointerClick, hint: `${pct(stats.checkout_click, stats.page_view)} des vues` },
+          ].map((item) => (
+            <Card key={item.title}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
+                <item.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{item.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">{item.hint}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Taux d'inscription</CardTitle>
+              <Percent className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pct(stats.lead_submit, stats.page_view)}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.lead_submit} inscription(s) sur {stats.page_view} vue(s)
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Formulaire ouvert → inscrit</CardTitle>
+              <Percent className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pct(stats.lead_submit, stats.modal_open)}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Efficacité du formulaire de capture
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
 
         <Card>
           <CardHeader>

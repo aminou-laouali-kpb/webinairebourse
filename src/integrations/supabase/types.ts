@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      page_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          session_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

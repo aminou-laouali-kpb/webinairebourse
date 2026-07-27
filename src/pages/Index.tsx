@@ -8,6 +8,7 @@ import { WhoIsFor } from "@/components/WhoIsFor";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { YouTubeFacade } from "@/components/YouTubeFacade";
 import { CheckCircle2, Award, Users, TrendingUp, ExternalLink, ShieldCheck, Gift } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 import guideImage from "@/assets/guide-ultime.png";
 
 const CONFIG = {
@@ -25,30 +26,41 @@ const Index = () => {
   const [showStickyBar, setShowStickyBar] = useState(false);
   const autoOpenDone = useRef(false);
 
-  const openModal = useCallback(() => setShowModal(true), []);
+  const openModal = useCallback((source: string) => {
+    setShowModal(true);
+    trackEvent("modal_open", { source });
+  }, []);
 
   const scrollToVideo = () => {
     document.getElementById("webinaire")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  useEffect(() => {
+    trackEvent("page_view", { path: window.location.pathname });
+  }, []);
+
+
   // Auto-open once: after 25s or at 30% scroll, whichever comes first
   useEffect(() => {
     if (localStorage.getItem(LEAD_STATUS_KEY)) return;
 
-    const trigger = () => {
+    const trigger = (source: string) => () => {
       if (autoOpenDone.current) return;
       autoOpenDone.current = true;
       setShowModal(true);
+      trackEvent("modal_open", { source });
     };
 
-    const timer = setTimeout(trigger, 25000);
+
+    const timer = setTimeout(trigger("timer_25s"), 25000);
     const onScroll = () => {
       const progress = window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight);
-      if (progress > 0.3) trigger();
+      if (progress > 0.3) trigger("scroll_30")();
     };
     const onExitIntent = (e: MouseEvent) => {
-      if (e.clientY <= 0) trigger();
+      if (e.clientY <= 0) trigger("exit_intent")();
     };
+
 
     window.addEventListener("scroll", onScroll, { passive: true });
     document.addEventListener("mouseleave", onExitIntent);
@@ -75,9 +87,11 @@ const Index = () => {
   const handleLeadSubmit = () => {
     setShowModal(false);
     setShowConfirmation(true);
+    trackEvent("lead_submit");
     scrollToVideo();
     setTimeout(() => setShowConfirmation(false), 10000);
   };
+
 
   return (
     <div className="min-h-screen bg-background pb-24 md:pb-16">
@@ -106,7 +120,7 @@ const Index = () => {
             ▶️ Regarder le webinaire
           </Button>
           <Button
-            onClick={openModal}
+            onClick={() => openModal("hero")}
             variant="outline"
             size="lg"
             className="h-14 px-8 text-lg font-bold border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all"
@@ -122,6 +136,7 @@ const Index = () => {
           <YouTubeFacade
             videoId={CONFIG.youtubeId}
             title="Webinaire KPB Education — Bourses d'études internationales"
+            onPlay={() => trackEvent("video_play")}
           />
         </div>
 
@@ -149,7 +164,7 @@ const Index = () => {
         <div className="mt-6 flex justify-center">
           <button
             type="button"
-            onClick={openModal}
+            onClick={() => openModal("under_video")}
             className="inline-flex items-center gap-2 text-primary font-semibold underline underline-offset-4 hover:text-gold transition-colors"
           >
             <Gift className="w-4 h-4" aria-hidden="true" />
@@ -244,6 +259,7 @@ const Index = () => {
             >
               <a
                 href={CONFIG.checkoutUrl}
+                onClick={() => trackEvent("checkout_click", { location: "offer" })}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Obtenir le Guide Ultime du Boursier Africain pour 4999 XOF"
@@ -312,7 +328,7 @@ const Index = () => {
             size="lg"
             className="px-12 h-16 text-xl font-bold bg-blue-dark hover:bg-blue-royal text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all"
           >
-            <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer">
+            <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent("checkout_click", { location: "final_cta" })}>
               Obtenir mon guide maintenant
             </a>
           </Button>
@@ -325,7 +341,7 @@ const Index = () => {
           <p className="font-semibold mb-3">KPB Éducation — Tous droits réservés.</p>
           <button
             type="button"
-            onClick={openModal}
+            onClick={() => openModal("footer")}
             className="text-gold font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity mb-4"
           >
             Recevoir le Guide gratuit des 10 Bourses 2026
@@ -356,7 +372,7 @@ const Index = () => {
               asChild
               className="bg-gold hover:bg-gold-light text-blue-dark font-bold shadow-cta whitespace-nowrap"
             >
-              <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer">
+              <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent("checkout_click", { location: "sticky_bar" })}>
                 Acheter maintenant
               </a>
             </Button>
