@@ -158,7 +158,7 @@ const Index = () => {
         <div className="mt-6 flex justify-center">
           <button
             type="button"
-            onClick={() => openModal("hero")}
+            onClick={() => openModal("under_video")}
             className="inline-flex items-center gap-2 text-primary font-semibold underline underline-offset-4 hover:text-gold transition-colors"
           >
             <Gift className="w-4 h-4" aria-hidden="true" />
@@ -334,7 +334,7 @@ const Index = () => {
           <p className="font-semibold mb-3">KPB Éducation — Tous droits réservés.</p>
           <button
             type="button"
-            onClick={() => openModal("hero")}
+            onClick={() => openModal("footer")}
             className="text-gold font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity mb-4"
           >
             Recevoir le Guide gratuit des 10 Bourses 2026
