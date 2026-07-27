@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, Mail, Phone, Globe, ArrowLeft, LogOut } from "lucide-react";
+import { Loader2, Users, Mail, Phone, Globe, ArrowLeft, LogOut, Eye, PlayCircle, MousePointerClick, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -24,12 +24,31 @@ interface Lead {
   created_at: string;
 }
 
+interface EventStats {
+  page_view: number;
+  video_play: number;
+  modal_open: number;
+  lead_submit: number;
+  checkout_click: number;
+}
+
+const EMPTY_STATS: EventStats = {
+  page_view: 0,
+  video_play: 0,
+  modal_open: 0,
+  lead_submit: 0,
+  checkout_click: 0,
+};
+
 export default function AdminDashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [stats, setStats] = useState<EventStats>(EMPTY_STATS);
+  const [uniqueVisitors, setUniqueVisitors] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const navigate = useNavigate();
+
 
   useEffect(() => {
     checkAuthAndRole();
