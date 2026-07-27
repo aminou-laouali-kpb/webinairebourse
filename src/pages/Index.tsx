@@ -87,9 +87,11 @@ const Index = () => {
   const handleLeadSubmit = () => {
     setShowModal(false);
     setShowConfirmation(true);
+    trackEvent("lead_submit");
     scrollToVideo();
     setTimeout(() => setShowConfirmation(false), 10000);
   };
+
 
   return (
     <div className="min-h-screen bg-background pb-24 md:pb-16">
