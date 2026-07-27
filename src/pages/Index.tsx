@@ -115,7 +115,7 @@ const Index = () => {
             ▶️ Regarder le webinaire
           </Button>
           <Button
-            onClick={openModal}
+            onClick={() => openModal("hero")}
             variant="outline"
             size="lg"
             className="h-14 px-8 text-lg font-bold border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all"
@@ -158,7 +158,7 @@ const Index = () => {
         <div className="mt-6 flex justify-center">
           <button
             type="button"
-            onClick={openModal}
+            onClick={() => openModal("hero")}
             className="inline-flex items-center gap-2 text-primary font-semibold underline underline-offset-4 hover:text-gold transition-colors"
           >
             <Gift className="w-4 h-4" aria-hidden="true" />
@@ -334,7 +334,7 @@ const Index = () => {
           <p className="font-semibold mb-3">KPB Éducation — Tous droits réservés.</p>
           <button
             type="button"
-            onClick={openModal}
+            onClick={() => openModal("hero")}
             className="text-gold font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity mb-4"
           >
             Recevoir le Guide gratuit des 10 Bourses 2026
