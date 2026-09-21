@@ -1,16 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LeadCaptureModal } from "@/components/LeadCaptureModal";
 import { FAQSection } from "@/components/FAQSection";
 import { Testimonials } from "@/components/Testimonials";
 import { WhoIsFor } from "@/components/WhoIsFor";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { YouTubeFacade } from "@/components/YouTubeFacade";
-import { CheckCircle2, Award, Users, TrendingUp, ExternalLink, ShieldCheck, Gift } from "lucide-react";
+import { CheckCircle2, Award, Users, TrendingUp, ExternalLink, ShieldCheck } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
 import { PaymentReassurance } from "@/components/PaymentReassurance";
-import { CHECKOUT_URL } from "@/lib/offer";
+import { CHECKOUT_URL, PRICE_XOF, PRICE_STRIKE_XOF } from "@/lib/offer";
 import guideImage from "@/assets/guide-ultime.png";
 
 const CONFIG = {
@@ -27,124 +26,89 @@ const INCLUDED_ITEMS = [
   { label: "✅ Checklists + mini-guide anglais", value: "4 000 XOF" },
 ];
 
-const LEAD_STATUS_KEY = "kpb_lead_status";
+/** Bouton d'achat unique — toutes les variantes mènent au même lien de paiement. */
+const BuyButton = ({
+  location,
+  label = "Obtenir le Guide maintenant 🚀",
+  className = "",
+}: {
+  location: string;
+  label?: string;
+  className?: string;
+}) => (
+  <Button
+    asChild
+    className={`w-full md:w-auto px-4 md:px-12 h-auto min-h-16 py-4 text-lg md:text-xl font-bold whitespace-normal bg-gold hover:bg-gold-light text-blue-dark shadow-cta md:hover:scale-105 transition-all ${className}`}
+  >
+    <a
+      href={CONFIG.checkoutUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => trackEvent("checkout_click", { location })}
+      aria-label={`Obtenir le Guide Ultime du Boursier Africain pour ${PRICE_XOF}`}
+    >
+      {label}
+    </a>
+  </Button>
+);
 
 const Index = () => {
-  const [showModal, setShowModal] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
-  const autoOpenDone = useRef(false);
-
-  const openModal = useCallback((source: string) => {
-    setShowModal(true);
-    trackEvent("modal_open", { source });
-  }, []);
-
-  const scrollToVideo = () => {
-    document.getElementById("webinaire")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
 
   useEffect(() => {
     trackEvent("page_view", { path: window.location.pathname });
   }, []);
 
-
-  // Auto-open once: after 25s or at 30% scroll, whichever comes first
   useEffect(() => {
-    if (localStorage.getItem(LEAD_STATUS_KEY)) return;
-
-    const trigger = (source: string) => () => {
-      if (autoOpenDone.current) return;
-      autoOpenDone.current = true;
-      setShowModal(true);
-      trackEvent("modal_open", { source });
-    };
-
-
-    const timer = setTimeout(trigger("timer_25s"), 25000);
-    const onScroll = () => {
-      const progress = window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight);
-      if (progress > 0.3) trigger("scroll_30")();
-    };
-    const onExitIntent = (e: MouseEvent) => {
-      if (e.clientY <= 0) trigger("exit_intent")();
-    };
-
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    document.addEventListener("mouseleave", onExitIntent);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("scroll", onScroll);
-      document.removeEventListener("mouseleave", onExitIntent);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => setShowStickyBar(window.scrollY > 600);
+    const handleScroll = () => setShowStickyBar(window.scrollY > 400);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleModalClose = () => {
-    setShowModal(false);
-    if (localStorage.getItem(LEAD_STATUS_KEY) !== "submitted") {
-      localStorage.setItem(LEAD_STATUS_KEY, "closed");
-    }
+  const scrollToOffer = () => {
+    document.getElementById("offre")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-
-  const handleLeadSubmit = () => {
-    setShowModal(false);
-    setShowConfirmation(true);
-    trackEvent("lead_submit");
-    scrollToVideo();
-    setTimeout(() => setShowConfirmation(false), 10000);
-  };
-
 
   return (
-    <div className="min-h-screen bg-background pb-24 md:pb-16">
+    <div className="min-h-screen bg-background pb-28 md:pb-20">
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-primary via-blue-dark to-primary text-primary-foreground py-3 text-center">
         <p className="text-sm md:text-base font-semibold px-4">
-          🎓 Webinaire Gratuit • Bourses d'études 2026-2027
+          🎓 Bourses d'études 2026-2027 • Accès immédiat après paiement
         </p>
       </div>
 
       {/* Hero Section */}
       <section className="container max-w-5xl mx-auto px-4 py-8 md:py-12 text-center">
         <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-foreground leading-tight mb-4">
-          <span className="block">Comment j'ai obtenu une bourse internationale…</span>
-          <span className="block text-primary">et comment toi aussi tu peux le faire</span>
+          <span className="block">Décroche une bourse d'études 2026-2027</span>
+          <span className="block text-primary">avec la méthode complète, étape par étape</span>
         </h1>
-        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-          Masterclass 100 % gratuite pour t'aider à comprendre comment candidater malin, même si tu pars de zéro.
+        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
+          Le Guide Ultime du Boursier Africain : le système exact (FR/EN) pour monter un dossier
+          solide, sans intermédiaire et sans payer un agent.
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button
-            onClick={scrollToVideo}
-            size="lg"
-            className="h-14 px-8 text-lg font-bold bg-gold hover:bg-gold-light text-blue-dark shadow-cta hover:scale-105 transition-all"
-          >
-            ▶️ Regarder le webinaire
-          </Button>
-          <Button
-            onClick={() => openModal("hero")}
-            variant="outline"
-            size="lg"
-            className="h-14 px-8 text-lg font-bold border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all"
-          >
-            Recevoir les ressources gratuites
-          </Button>
+        <p className="text-2xl md:text-3xl font-black text-gold mb-6">
+          {PRICE_XOF}{" "}
+          <span className="text-base md:text-lg font-normal text-muted-foreground line-through">
+            {PRICE_STRIKE_XOF}
+          </span>
+        </p>
+        <div className="flex justify-center">
+          <BuyButton location="hero" label={`Obtenir le Guide — ${PRICE_XOF}`} />
         </div>
+        <PaymentReassurance />
       </section>
 
       {/* Video Section */}
-      <section id="webinaire" className="container max-w-4xl mx-auto px-4 mb-12 scroll-mt-4">
+      <section id="video" className="container max-w-4xl mx-auto px-4 mb-12 scroll-mt-4">
+        <h2 className="text-2xl md:text-3xl font-bold text-center text-foreground mb-5">
+          Regarde ce que contient le Guide (3 min)
+        </h2>
         <div className="relative w-full rounded-2xl overflow-hidden shadow-cta bg-accent aspect-video">
           <YouTubeFacade
             videoId={CONFIG.youtubeId}
-            title="Webinaire KPB Education — Bourses d'études internationales"
+            title="Le Guide Ultime du Boursier Africain — présentation"
             onPlay={() => trackEvent("video_play")}
           />
         </div>
@@ -162,38 +126,8 @@ const Index = () => {
           </a>
         </p>
 
-        {showConfirmation && (
-          <div className="mt-6 p-4 bg-green-50 border-2 border-green-500 rounded-xl text-center animate-in fade-in slide-in-from-top duration-500">
-            <p className="text-green-700 font-semibold">
-              ✅ Merci ! Tu recevras les ressources dans ta boîte email et sur WhatsApp.
-            </p>
-          </div>
-        )}
-
-        <div className="mt-6 flex flex-col items-center gap-4">
-          <button
-            type="button"
-            onClick={() => openModal("under_video")}
-            className="inline-flex items-center gap-2 text-primary font-semibold underline underline-offset-4 hover:text-gold transition-colors"
-          >
-            <Gift className="w-4 h-4" aria-hidden="true" />
-            Recevoir le Guide des 10 Bourses 2026 (gratuit)
-          </button>
-
-          <Button
-            asChild
-            className="w-full sm:w-auto px-6 h-auto min-h-14 py-3 text-base font-bold whitespace-normal bg-gold hover:bg-gold-light text-blue-dark shadow-cta"
-          >
-            <a
-              href={CONFIG.checkoutUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackEvent("checkout_click", { location: "under_video" })}
-            >
-              Obtenir le Guide Ultime — 9 000 XOF
-            </a>
-          </Button>
-
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <BuyButton location="under_video" label={`Je veux le Guide — ${PRICE_XOF}`} />
           <PaymentReassurance compact />
         </div>
       </section>
@@ -202,7 +136,7 @@ const Index = () => {
       <section className="bg-muted py-12 md:py-16">
         <div className="container max-w-4xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-10">
-            Dans ce webinaire, tu vas découvrir :
+            Dans le Guide, tu vas apprendre :
           </h2>
 
           <div className="grid gap-5 md:grid-cols-2">
@@ -219,6 +153,10 @@ const Index = () => {
               </div>
             ))}
           </div>
+
+          <div className="mt-10 flex flex-col items-center gap-3">
+            <BuyButton location="after_benefits" label={`Obtenir le Guide — ${PRICE_XOF}`} />
+          </div>
         </div>
       </section>
 
@@ -226,11 +164,11 @@ const Index = () => {
       <WhoIsFor />
 
       {/* Guide Offer Section */}
-      <section className="container max-w-5xl mx-auto px-4 py-12 md:py-20">
+      <section id="offre" className="container max-w-5xl mx-auto px-4 py-12 md:py-20 scroll-mt-4">
         <div className="bg-gradient-to-br from-card to-muted border-4 border-gold rounded-3xl shadow-cta p-6 md:p-10">
           <div className="text-center mb-6">
             <span className="inline-block px-5 py-2 bg-gold text-blue-dark font-bold rounded-full text-sm mb-4">
-              Pour aller plus loin après le webinaire
+              Tout ce que tu reçois aujourd'hui
             </span>
             <h2 className="text-3xl md:text-5xl font-black text-foreground mb-3">
               <span className="block">Le Guide Ultime du</span>
@@ -275,10 +213,10 @@ const Index = () => {
 
           <div className="bg-card rounded-2xl p-6 md:p-8 text-center border-2 border-border">
             <div className="mb-5">
-              <p className="text-muted-foreground line-through text-xl mb-2">19 999 XOF</p>
-              <p className="text-5xl md:text-6xl font-black text-gold mb-2">9 000 XOF</p>
+              <p className="text-muted-foreground line-through text-xl mb-2">{PRICE_STRIKE_XOF}</p>
+              <p className="text-5xl md:text-6xl font-black text-gold mb-2">{PRICE_XOF}</p>
               <p className="text-sm text-destructive font-semibold mb-4">
-                ⚡ Offre spéciale participants au webinaire — se termine dans :
+                ⚡ Prix de lancement — se termine dans :
               </p>
               <CountdownTimer />
             </div>
@@ -293,20 +231,7 @@ const Index = () => {
               les modèles, envoyés par email et WhatsApp.
             </div>
 
-            <Button
-              asChild
-              className="w-full md:w-auto px-4 md:px-12 h-auto min-h-16 py-4 text-lg md:text-xl font-bold whitespace-normal bg-gold hover:bg-gold-light text-blue-dark shadow-cta hover:shadow-cta md:hover:scale-105 transition-all"
-            >
-              <a
-                href={CONFIG.checkoutUrl}
-                onClick={() => trackEvent("checkout_click", { location: "offer" })}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Obtenir le Guide Ultime du Boursier Africain pour 9000 XOF"
-              >
-                Obtenir le Guide maintenant 🚀
-              </a>
-            </Button>
+            <BuyButton location="offer" />
 
             <PaymentReassurance />
 
@@ -363,15 +288,21 @@ const Index = () => {
             Prêt à passer à l'action ?
           </h2>
           <p className="text-blue-dark/80 text-lg mb-8 max-w-2xl mx-auto">
-            Rejoins les centaines d'étudiants qui ont transformé leur candidature avec le Guide Ultime.
+            Rejoins les centaines d'étudiants qui ont transformé leur candidature avec le Guide
+            Ultime. Accès immédiat, garanti 7 jours.
           </p>
           <Button
             asChild
             size="lg"
             className="w-full md:w-auto px-4 md:px-12 h-auto min-h-16 py-4 text-lg md:text-xl font-bold whitespace-normal bg-blue-dark hover:bg-blue-royal text-primary-foreground shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
           >
-            <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent("checkout_click", { location: "final_cta" })}>
-              Obtenir mon guide maintenant
+            <a
+              href={CONFIG.checkoutUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent("checkout_click", { location: "final_cta" })}
+            >
+              Obtenir mon guide — {PRICE_XOF}
             </a>
           </Button>
         </div>
@@ -383,24 +314,24 @@ const Index = () => {
           <p className="font-semibold mb-3">KPB Éducation — Tous droits réservés.</p>
           <button
             type="button"
-            onClick={() => openModal("footer")}
+            onClick={scrollToOffer}
             className="text-gold font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity mb-4"
           >
-            Recevoir le Guide gratuit des 10 Bourses 2026
+            Voir l'offre du Guide Ultime
           </button>
           <div className="flex flex-wrap justify-center gap-4 text-sm text-accent-foreground/70">
             <Link to="/confidentialite" className="hover:text-gold transition-colors">
               Politique de confidentialité
             </Link>
             <span>•</span>
-            <p>Tu peux te désinscrire à tout moment de nos emails/WhatsApp.</p>
+            <p>Paiement sécurisé • Satisfait ou remboursé sous 7 jours.</p>
           </div>
         </div>
       </footer>
 
       {/* Sticky Bottom Bar */}
       {showStickyBar && (
-        <div className="fixed bottom-0 left-0 right-0 bg-blue-dark text-primary-foreground shadow-sticky px-3 py-2 md:py-2 z-40 animate-in slide-in-from-bottom duration-300">
+        <div className="fixed bottom-0 left-0 right-0 bg-blue-dark text-primary-foreground shadow-sticky px-3 py-2 z-40 animate-in slide-in-from-bottom duration-300">
           <div className="container max-w-4xl mx-auto px-0 flex items-center justify-between gap-2 sm:gap-3">
             <div className="text-left min-w-0 flex-1">
               <p className="text-[11px] sm:text-xs font-medium opacity-90 truncate">
@@ -409,7 +340,10 @@ const Index = () => {
                 <CountdownTimer variant="compact" />
               </p>
               <p className="text-base sm:text-lg font-black text-gold leading-tight whitespace-nowrap">
-                9 000 XOF <span className="text-[10px] sm:text-xs font-normal line-through opacity-60">19 999</span>
+                9 000 XOF{" "}
+                <span className="text-[10px] sm:text-xs font-normal line-through opacity-60">
+                  19 999
+                </span>
               </p>
               <p className="hidden md:block text-[11px] opacity-80 truncate">
                 Wave • Orange Money • MTN • Moov — garanti 7 jours
@@ -419,16 +353,18 @@ const Index = () => {
               asChild
               className="bg-gold hover:bg-gold-light text-blue-dark font-bold shadow-cta whitespace-nowrap text-sm px-4 sm:text-base sm:px-6 flex-shrink-0"
             >
-              <a href={CONFIG.checkoutUrl} target="_blank" rel="noopener noreferrer" onClick={() => trackEvent("checkout_click", { location: "sticky_bar" })}>
+              <a
+                href={CONFIG.checkoutUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent("checkout_click", { location: "sticky_bar" })}
+              >
                 Acheter maintenant
               </a>
             </Button>
           </div>
         </div>
       )}
-
-      {/* Lead Capture Modal */}
-      {showModal && <LeadCaptureModal onClose={handleModalClose} onSubmit={handleLeadSubmit} />}
     </div>
   );
 };
