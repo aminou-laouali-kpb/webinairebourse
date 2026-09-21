@@ -9,14 +9,23 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 import { YouTubeFacade } from "@/components/YouTubeFacade";
 import { CheckCircle2, Award, Users, TrendingUp, ExternalLink, ShieldCheck, Gift } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
+import { PaymentReassurance } from "@/components/PaymentReassurance";
+import { CHECKOUT_URL } from "@/lib/offer";
 import guideImage from "@/assets/guide-ultime.png";
 
 const CONFIG = {
   youtubeId: "txFGmhZhpv4",
   guideImageUrl: guideImage,
-  checkoutUrl:
-    "https://www.pay.moneyfusion.net/le-guide-ultime-du-boursier_1758540657148/",
+  checkoutUrl: CHECKOUT_URL,
 };
+
+const INCLUDED_ITEMS = [
+  { label: "📘 Guide PDF pas-à-pas (FR/EN)", value: "12 000 XOF" },
+  { label: "📊 Tableur 30 bourses 2026-2027", value: "9 000 XOF" },
+  { label: "📝 5 modèles de CV + 5 lettres de motivation FR/EN", value: "8 000 XOF" },
+  { label: "✉️ 4 lettres de recommandation FR/EN", value: "5 000 XOF" },
+  { label: "✅ Checklists + mini-guide anglais", value: "4 000 XOF" },
+];
 
 const LEAD_STATUS_KEY = "kpb_lead_status";
 
