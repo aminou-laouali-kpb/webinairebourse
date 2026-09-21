@@ -15,6 +15,10 @@ const faqData = [
     answer: "Non, aucune promesse de résultat. Le guide te donne la méthode, les modèles et la clarté nécessaires, mais ton travail et ton profil restent essentiels. C'est un outil, pas une baguette magique."
   },
   {
+    question: "Comment je paie si je n'ai pas de carte bancaire ?",
+    answer: "Tu peux payer directement depuis ton téléphone avec Wave, Orange Money, MTN MoMo ou Moov Money. La carte bancaire reste possible, mais elle n'est pas obligatoire. Le paiement se fait sur une page sécurisée MoneyFusion."
+  },
+  {
     question: "Et si je ne suis pas satisfait du guide ?",
     answer: "Tu es protégé par une garantie satisfait ou remboursé de 7 jours. Si le guide ne répond pas à tes attentes, tu peux demander un remboursement complet, sans questions."
   },
