@@ -411,6 +411,9 @@ const Index = () => {
               <p className="text-base sm:text-lg font-black text-gold leading-tight whitespace-nowrap">
                 9 000 XOF <span className="text-[10px] sm:text-xs font-normal line-through opacity-60">19 999</span>
               </p>
+              <p className="hidden md:block text-[11px] opacity-80 truncate">
+                Wave • Orange Money • MTN • Moov — garanti 7 jours
+              </p>
             </div>
             <Button
               asChild
