@@ -267,6 +267,16 @@ const Index = () => {
               <CountdownTimer />
             </div>
 
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto mb-5">
+              Une seule candidature ratée te coûte une année entière. Le guide coûte moins qu'un
+              forfait internet mensuel.
+            </p>
+
+            <div className="bg-muted rounded-xl p-4 mb-5 text-sm text-foreground font-medium">
+              ⏱️ Ce que tu obtiens dans les 2 minutes : le guide PDF, le tableur des bourses et tous
+              les modèles, envoyés par email et WhatsApp.
+            </div>
+
             <Button
               asChild
               className="w-full md:w-auto px-4 md:px-12 h-auto min-h-16 py-4 text-lg md:text-xl font-bold whitespace-normal bg-gold hover:bg-gold-light text-blue-dark shadow-cta hover:shadow-cta md:hover:scale-105 transition-all"
@@ -282,9 +292,11 @@ const Index = () => {
               </a>
             </Button>
 
-            <div className="mt-5 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <PaymentReassurance />
+
+            <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <ShieldCheck className="w-5 h-5 text-gold" aria-hidden="true" />
-              <span>Paiement sécurisé • Accès immédiat après paiement</span>
+              <span>Paiement sécurisé par MoneyFusion</span>
             </div>
           </div>
         </div>
