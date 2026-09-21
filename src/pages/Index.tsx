@@ -9,14 +9,23 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 import { YouTubeFacade } from "@/components/YouTubeFacade";
 import { CheckCircle2, Award, Users, TrendingUp, ExternalLink, ShieldCheck, Gift } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
+import { PaymentReassurance } from "@/components/PaymentReassurance";
+import { CHECKOUT_URL } from "@/lib/offer";
 import guideImage from "@/assets/guide-ultime.png";
 
 const CONFIG = {
   youtubeId: "txFGmhZhpv4",
   guideImageUrl: guideImage,
-  checkoutUrl:
-    "https://www.pay.moneyfusion.net/le-guide-ultime-du-boursier_1758540657148/",
+  checkoutUrl: CHECKOUT_URL,
 };
+
+const INCLUDED_ITEMS = [
+  { label: "📘 Guide PDF pas-à-pas (FR/EN)", value: "12 000 XOF" },
+  { label: "📊 Tableur 30 bourses 2026-2027", value: "9 000 XOF" },
+  { label: "📝 5 modèles de CV + 5 lettres de motivation FR/EN", value: "8 000 XOF" },
+  { label: "✉️ 4 lettres de recommandation FR/EN", value: "5 000 XOF" },
+  { label: "✅ Checklists + mini-guide anglais", value: "4 000 XOF" },
+];
 
 const LEAD_STATUS_KEY = "kpb_lead_status";
 
@@ -161,7 +170,7 @@ const Index = () => {
           </div>
         )}
 
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex flex-col items-center gap-4">
           <button
             type="button"
             onClick={() => openModal("under_video")}
@@ -170,6 +179,22 @@ const Index = () => {
             <Gift className="w-4 h-4" aria-hidden="true" />
             Recevoir le Guide des 10 Bourses 2026 (gratuit)
           </button>
+
+          <Button
+            asChild
+            className="w-full sm:w-auto px-6 h-auto min-h-14 py-3 text-base font-bold whitespace-normal bg-gold hover:bg-gold-light text-blue-dark shadow-cta"
+          >
+            <a
+              href={CONFIG.checkoutUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent("checkout_click", { location: "under_video" })}
+            >
+              Obtenir le Guide Ultime — 9 000 XOF
+            </a>
+          </Button>
+
+          <PaymentReassurance compact />
         </div>
       </section>
 
@@ -226,20 +251,25 @@ const Index = () => {
               />
             </div>
 
-            <div className="order-1 md:order-2 space-y-5">
+            <div className="order-1 md:order-2">
               <h3 className="text-xl font-bold text-foreground mb-4">Ce qui est inclus :</h3>
-              {[
-                "📘 Guide PDF pas-à-pas (FR/EN)",
-                "📊 Tableur 30 bourses 2026-2027 (Licence, Master, Doctorat)",
-                "📝 5 modèles de CV + 5 lettres de motivation FR/EN",
-                "✉️ 4 lettres de recommandation FR/EN",
-                "✅ Checklists + mini-guide pour améliorer ton anglais",
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-gold rounded-full flex-shrink-0" />
-                  <p className="text-foreground font-medium">{item}</p>
-                </div>
-              ))}
+              <ul className="space-y-3">
+                {INCLUDED_ITEMS.map((item) => (
+                  <li key={item.label} className="flex items-start justify-between gap-3">
+                    <span className="flex items-start gap-3 text-foreground font-medium">
+                      <span className="w-2 h-2 bg-gold rounded-full flex-shrink-0 mt-2" />
+                      {item.label}
+                    </span>
+                    <span className="text-sm text-muted-foreground line-through whitespace-nowrap flex-shrink-0">
+                      {item.value}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5 pt-4 border-t-2 border-gold/40 flex items-center justify-between gap-3">
+                <span className="font-bold text-foreground">Valeur totale</span>
+                <span className="font-black text-foreground line-through">38 000 XOF</span>
+              </div>
             </div>
           </div>
 
@@ -251,6 +281,16 @@ const Index = () => {
                 ⚡ Offre spéciale participants au webinaire — se termine dans :
               </p>
               <CountdownTimer />
+            </div>
+
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto mb-5">
+              Une seule candidature ratée te coûte une année entière. Le guide coûte moins qu'un
+              forfait internet mensuel.
+            </p>
+
+            <div className="bg-muted rounded-xl p-4 mb-5 text-sm text-foreground font-medium">
+              ⏱️ Ce que tu obtiens dans les 2 minutes : le guide PDF, le tableur des bourses et tous
+              les modèles, envoyés par email et WhatsApp.
             </div>
 
             <Button
@@ -268,9 +308,11 @@ const Index = () => {
               </a>
             </Button>
 
-            <div className="mt-5 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <PaymentReassurance />
+
+            <div className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <ShieldCheck className="w-5 h-5 text-gold" aria-hidden="true" />
-              <span>Paiement sécurisé • Accès immédiat après paiement</span>
+              <span>Paiement sécurisé par MoneyFusion</span>
             </div>
           </div>
         </div>
@@ -368,6 +410,9 @@ const Index = () => {
               </p>
               <p className="text-base sm:text-lg font-black text-gold leading-tight whitespace-nowrap">
                 9 000 XOF <span className="text-[10px] sm:text-xs font-normal line-through opacity-60">19 999</span>
+              </p>
+              <p className="hidden md:block text-[11px] opacity-80 truncate">
+                Wave • Orange Money • MTN • Moov — garanti 7 jours
               </p>
             </div>
             <Button
