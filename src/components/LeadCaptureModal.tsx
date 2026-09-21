@@ -8,6 +8,9 @@ import "react-international-phone/style.css";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { toast } from "sonner";
+import { PaymentReassurance } from "@/components/PaymentReassurance";
+import { CHECKOUT_URL, PRICE_XOF, PRICE_STRIKE_XOF } from "@/lib/offer";
+import { trackEvent } from "@/lib/analytics";
 
 export interface LeadFormData {
   firstName: string;
