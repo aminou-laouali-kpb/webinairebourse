@@ -235,20 +235,25 @@ const Index = () => {
               />
             </div>
 
-            <div className="order-1 md:order-2 space-y-5">
+            <div className="order-1 md:order-2">
               <h3 className="text-xl font-bold text-foreground mb-4">Ce qui est inclus :</h3>
-              {[
-                "📘 Guide PDF pas-à-pas (FR/EN)",
-                "📊 Tableur 30 bourses 2026-2027 (Licence, Master, Doctorat)",
-                "📝 5 modèles de CV + 5 lettres de motivation FR/EN",
-                "✉️ 4 lettres de recommandation FR/EN",
-                "✅ Checklists + mini-guide pour améliorer ton anglais",
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-gold rounded-full flex-shrink-0" />
-                  <p className="text-foreground font-medium">{item}</p>
-                </div>
-              ))}
+              <ul className="space-y-3">
+                {INCLUDED_ITEMS.map((item) => (
+                  <li key={item.label} className="flex items-start justify-between gap-3">
+                    <span className="flex items-start gap-3 text-foreground font-medium">
+                      <span className="w-2 h-2 bg-gold rounded-full flex-shrink-0 mt-2" />
+                      {item.label}
+                    </span>
+                    <span className="text-sm text-muted-foreground line-through whitespace-nowrap flex-shrink-0">
+                      {item.value}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5 pt-4 border-t-2 border-gold/40 flex items-center justify-between gap-3">
+                <span className="font-bold text-foreground">Valeur totale</span>
+                <span className="font-black text-foreground line-through">38 000 XOF</span>
+              </div>
             </div>
           </div>
 
