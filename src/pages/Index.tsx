@@ -170,7 +170,7 @@ const Index = () => {
           </div>
         )}
 
-        <div className="mt-6 flex justify-center">
+        <div className="mt-6 flex flex-col items-center gap-4">
           <button
             type="button"
             onClick={() => openModal("under_video")}
@@ -179,6 +179,22 @@ const Index = () => {
             <Gift className="w-4 h-4" aria-hidden="true" />
             Recevoir le Guide des 10 Bourses 2026 (gratuit)
           </button>
+
+          <Button
+            asChild
+            className="w-full sm:w-auto px-6 h-auto min-h-14 py-3 text-base font-bold whitespace-normal bg-gold hover:bg-gold-light text-blue-dark shadow-cta"
+          >
+            <a
+              href={CONFIG.checkoutUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent("checkout_click", { location: "under_video" })}
+            >
+              Obtenir le Guide Ultime — 9 000 XOF
+            </a>
+          </Button>
+
+          <PaymentReassurance compact />
         </div>
       </section>
 
