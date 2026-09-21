@@ -169,21 +169,52 @@ export const LeadCaptureModal = ({ onClose, onSubmit }: LeadCaptureModalProps) =
         </button>
 
         {succeeded ? (
-          <div className="p-8 text-center">
-            <CheckCircle2 className="w-16 h-16 text-gold mx-auto mb-4" aria-hidden="true" />
+          <div className="p-6 md:p-8 text-center">
+            <CheckCircle2 className="w-14 h-14 text-gold mx-auto mb-3" aria-hidden="true" />
             <h2 id="lead-modal-title" className="text-2xl md:text-3xl font-bold text-foreground mb-3">
               C'est confirmé, {formData.firstName} ! 🎉
             </h2>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-5">
               Tu vas recevoir ton accès au webinaire et le Guide des 10 Bourses par email et sur
               WhatsApp. Pense à vérifier tes spams.
             </p>
-            <Button
+
+            <div className="rounded-2xl border-2 border-gold bg-muted p-5 mb-5 text-left">
+              <p className="text-sm font-bold text-destructive mb-2">
+                ⚡ Offre réservée aux inscrits
+              </p>
+              <p className="font-bold text-foreground mb-1">Le Guide Ultime du Boursier Africain</p>
+              <p className="text-sm text-muted-foreground mb-3">
+                Le système complet (FR/EN) : guide PDF, tableur de 30 bourses 2026-2027, modèles de
+                CV, lettres de motivation et de recommandation.
+              </p>
+              <p className="mb-4">
+                <span className="text-muted-foreground line-through mr-2">{PRICE_STRIKE_XOF}</span>
+                <span className="text-3xl font-black text-gold">{PRICE_XOF}</span>
+              </p>
+              <Button
+                asChild
+                className="w-full h-auto min-h-14 py-3 text-base font-bold whitespace-normal bg-gold hover:bg-gold-light text-blue-dark shadow-cta"
+              >
+                <a
+                  href={CHECKOUT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackEvent("checkout_click", { location: "lead_confirmation" })}
+                >
+                  Obtenir le Guide maintenant 🚀
+                </a>
+              </Button>
+              <PaymentReassurance compact />
+            </div>
+
+            <button
+              type="button"
               onClick={onSubmit}
-              className="w-full h-14 text-lg font-bold bg-gold hover:bg-gold-light text-blue-dark shadow-cta"
+              className="text-primary font-semibold underline underline-offset-4 hover:text-gold transition-colors"
             >
               Regarder le webinaire maintenant ▶️
-            </Button>
+            </button>
           </div>
         ) : (
           <div className="p-6 md:p-8">
