@@ -7,8 +7,8 @@ import {
 
 const faqData = [
   {
-    question: "Est-ce que le webinaire est vraiment gratuit ?",
-    answer: "Oui, 100 % gratuit. Aucune carte bancaire requise. Je veux juste t'aider à comprendre comment candidater intelligemment aux bourses."
+    question: "Est-ce que je reçois le guide tout de suite ?",
+    answer: "Oui. Dès que ton paiement est validé, tu reçois le guide PDF, le tableur des bourses et tous les modèles par email et sur WhatsApp, en général en moins de 2 minutes."
   },
   {
     question: "Le guide garantit-il que je vais obtenir une bourse ?",
